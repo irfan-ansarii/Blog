@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import {
+  Image,
   Layers,
   LayoutDashboard,
   MessageCircle,
@@ -30,6 +32,16 @@ const items = [
     icon: Layers,
   },
   {
+    title: "Comments",
+    slug: "/comments",
+    icon: MessageCircle,
+  },
+  {
+    title: "Media",
+    slug: "/media",
+    icon: Image,
+  },
+  {
     title: "Categories",
     slug: "/categories",
     icon: Package2,
@@ -45,11 +57,7 @@ const items = [
     slug: "/audience",
     icon: Users,
   },
-  {
-    title: "Messages",
-    slug: "/messages",
-    icon: MessageCircle,
-  },
+
   {
     title: "Settings",
     slug: "/settings",
@@ -57,9 +65,9 @@ const items = [
   },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ className }: { className?: string }) => {
   return (
-    <div className="flex h-full max-h-screen flex-col gap-2">
+    <div className={cn("flex h-full max-h-screen flex-col gap-2", className)}>
       <div className="flex h-[60px] items-center border-b px-5">
         <Link className="flex items-center gap-2 font-semibold" href="/admin">
           <Logo />
@@ -72,7 +80,7 @@ const Sidebar = () => {
             return (
               <NavItem href={`/admin/${item.slug}`}>
                 <span className="inline-flex items-center gap-2">
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                   {item.title}
                 </span>
                 {item.label && <Badge className="text-xs">{item.label}</Badge>}
@@ -86,7 +94,7 @@ const Sidebar = () => {
         <Link
           className={buttonVariants({
             variant: "secondary",
-            className: "!flex truncate !px-3 gap-2 h-12",
+            className: "!flex truncate !px-3 gap-2 h-12 !bg-accent",
           })}
           href="profile"
         >
