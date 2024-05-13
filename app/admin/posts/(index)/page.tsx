@@ -6,8 +6,8 @@ import PostCard from "../_components/post-card";
 const PostsPage = () => {
   return (
     <>
-      <div className="grid gap-3">
-        {[...Array(10)].map(() => (
+      <div className="grid gap-3 items-start flex-1">
+        {[...Array(21)].map(() => (
           <PostCard />
         ))}
       </div>

@@ -6,18 +6,16 @@ import {
   ExternalLink,
   Eye,
   LockKeyhole,
+  PenSquare,
   Tags,
   User,
 } from "lucide-react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
 import Tooltip from "@/components/custom-ui/tooltip";
 
 const PostCard = () => {
@@ -30,21 +28,28 @@ const PostCard = () => {
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex flex-1 gap-2 md:gap-4 overflow-hidden">
             <Avatar className="border-2 md:w-12 md:h-12">
-              <AvatarImage src="" className="p-1 rounded-full" />
+              <AvatarImage
+                src="https://api.dicebear.com/8.x/shapes/svg"
+                className="p-1 rounded-full"
+              />
               <AvatarFallback className="font-medium text-xs uppercase">
                 A
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-auto overflow-hidden">
-              <CardTitle
-                className={`text-base md:text-lg font-medium truncate inline-flex items-center ${
+              <Link
+                href="/admin/posts/1/"
+                className={`text-base md:text-lg font-medium truncate inline-flex items-center [&:hover>svg]:opacity-100 !focus-visible:ring-transparent ${
                   !isArchived ? "line-through text-muted-foreground" : ""
                 }`}
               >
                 Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                <LockKeyhole className="w-4 h-4 ml-2" />
-              </CardTitle>
+                <span>
+                  <LockKeyhole className="w-4 h-4 ml-2 " />
+                </span>
+                <PenSquare className="w-4 h-4 ml-2 opacity-0" />
+              </Link>
 
               <div className="flex items-center gap-2 max-w-fit font-medium text-sm md:text-base overflow-hidden">
                 {!isArchived ? (
@@ -58,7 +63,7 @@ const PostCard = () => {
                     className={`truncate flex-1 inline-flex items-center hover:underline`}
                   >
                     Lorem ipsum dolor sit amet consectetur.
-                    <ExternalLink className="w-4 h-4 ml-2" />
+                    <ExternalLink className="w-4 h-4 ml-2 " />
                   </a>
                 )}
               </div>

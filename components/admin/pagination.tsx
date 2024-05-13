@@ -1,12 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import { buttonVariants } from "../ui/button";
-import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardDescription } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Pagination = () => {
   return (
-    <Card className="sticky bottom-0 mt-auto">
+    <Card className="sticky bottom-0 mt-4">
       <div className="flex justify-center gap-4 p-2 pb-2 items-center">
         <Link
           href="/"
