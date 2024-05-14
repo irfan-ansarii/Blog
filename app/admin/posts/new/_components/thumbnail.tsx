@@ -33,7 +33,7 @@ const Thumbnail = () => {
           /> */}
         </Label>
 
-        <Input type="file" id="file-input" className="sr-only" />
+        <Input type="file" id="file-input" className="hidden" />
       </CardContent>
     </Card>
   );

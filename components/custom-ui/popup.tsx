@@ -13,7 +13,7 @@ import {
 
 interface Props {
   open?: boolean;
-  onOpenChange?: () => void;
+  onOpenChange?: (state: boolean) => void;
   content: React.ReactNode;
   children: React.ReactNode;
   variant?: "sheet" | "dialog" | "popover";
