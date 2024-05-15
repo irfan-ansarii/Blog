@@ -1,9 +1,25 @@
-import { Editor } from "@tiptap/core";
-import { EditorContent } from "@tiptap/react";
 import React from "react";
 
-const Content = ({ editor }: { editor: any }) => {
-  return <EditorContent editor={editor} className="flex-1 overflow-y-auto" />;
+import { ClientSideSuspense } from "@liveblocks/react";
+import { EditorContent } from "@tiptap/react";
+import { useTiptapEditor } from "./hooks/use-tiptap-editor";
+import { Toolbar } from "./toolbar";
+
+const Content = ({ doc, provider }: any) => {
+  const editor = useTiptapEditor({ doc, provider });
+  if (!editor) return;
+  return (
+    <ClientSideSuspense fallback={"Loading editor..."}>
+      {() => (
+        <div className="relativ flex flex-col flex-1 overflow-hidden">
+          <Toolbar editor={editor!} />
+          <div className="p-6">
+            <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
+          </div>
+        </div>
+      )}
+    </ClientSideSuspense>
+  );
 };
 
 export default Content;

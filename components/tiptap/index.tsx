@@ -1,24 +1,17 @@
 "use client";
 
 import React from "react";
-import { useTiptapEditor } from "./hooks/use-tiptap-editor";
+
+import useLiveblocks from "./hooks/use-liveblocks";
 import Content from "./content";
-import { Toolbar } from "./toolbar";
 
 export const TiptapEditor = () => {
-  const editor = useTiptapEditor();
-  if (!editor) {
-    return null;
-  }
+  const collab = useLiveblocks();
 
-  return (
-    <div className="relative flex flex-col flex-1 h-full overflow-hidden">
-      <Toolbar editor={editor} />
-      <div className="p-6">
-        <Content editor={editor} />
-      </div>
-    </div>
-  );
+  if (!collab) return;
+
+  const { doc, provider } = collab;
+  return <Content doc={doc} provider={provider} />;
 };
 
 export default TiptapEditor;

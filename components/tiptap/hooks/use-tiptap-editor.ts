@@ -10,10 +10,19 @@ import Highlight from "@tiptap/extension-highlight";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
 import { Image } from "@tiptap/extension-image";
-import { TaskItem } from "../task-item";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import TextColor from "@tiptap/extension-color";
+
+import { TaskItem } from "../task-item";
+
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
+
+import { lowlight } from "lowlight";
+
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import { useHistory, useSelf } from "@/lib/liveblocks.config";
 
 const classes: Record<number, string> = {
   1: "text-5xl",
@@ -23,13 +32,38 @@ const classes: Record<number, string> = {
   5: "text-xl",
 };
 
-export const useTiptapEditor = () => {
+export const useTiptapEditor = (args: any) => {
+  let collabConfig: any = [];
+
+  const { info } = useSelf();
+
+  if (args && args.doc) {
+    const { doc, provider } = args;
+
+    collabConfig = [
+      Collaboration.configure({
+        document: doc,
+      }),
+
+      CollaborationCursor.configure({
+        provider: provider,
+        user: {
+          ...info,
+        },
+      }),
+    ];
+  }
+
   const editor = useEditor({
     editorProps: {
       attributes: {
         class: "min-h-96",
         style: "outline: none",
       },
+    },
+    onUpdate({ editor }) {
+      // console.log(editor.getHTML());
+      // console.log(editor.getJSON());
     },
     extensions: [
       StarterKit.configure({
@@ -50,8 +84,8 @@ export const useTiptapEditor = () => {
             spellcheck: false,
           },
         },
-
         // The Collaboration extension comes with its own history handling
+        history: false,
         horizontalRule: {
           HTMLAttributes: {
             class: "border-b",
@@ -91,11 +125,16 @@ export const useTiptapEditor = () => {
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+
       Typography,
       Image.configure({
         HTMLAttributes: {
           class: "tiptap-image",
         },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: null,
       }),
       Link.configure({
         HTMLAttributes: {
@@ -119,19 +158,7 @@ export const useTiptapEditor = () => {
           class: "tiptap-youtube",
         },
       }),
-      // Register the document with Tiptap
-      //   Collaboration.configure({
-      //     document: doc,
-      //   }),
-      // Attach provider and user info
-      //   CollaborationCursor.configure({
-      //     provider: provider,
-      //     user: {
-      //       name,
-      //       color,
-      //       picture,
-      //     },
-      //   }),
+      ...collabConfig,
     ],
   });
 

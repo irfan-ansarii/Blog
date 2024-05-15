@@ -6,13 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { FormField, FormItem } from "@/components/ui/form";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useOthers, useSelf } from "@/lib/liveblocks.config";
 
 const StickyAction = ({ form }) => {
   const [openDate, setOpenDate] = useState(false);
 
+  const users = [useSelf(), useOthers()].flatMap((u) => u);
+
   return (
     <Card className="sticky top-0  border p-4 col-span-3 z-10">
       <div className="flex items-center justify-end gap-4">
+        <div className="-space-x-2 flex">
+          {users.map(({ info }) => (
+            <Avatar className="w-8 h-8 border-2">
+              <AvatarImage src={info?.picture} />
+              <AvatarFallback>{info?.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          ))}
+        </div>
         <FormField
           control={form.control}
           name="published_at"

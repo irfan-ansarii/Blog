@@ -3,7 +3,7 @@ import { createRoomContext } from "@liveblocks/react";
 
 const client = createClient({
   authEndpoint: "/api/liveblocks-auth",
-  // throttle: 100,
+  throttle: 100,
 });
 
 // Presence represents the properties that exist on every user in the Room

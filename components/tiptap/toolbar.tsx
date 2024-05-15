@@ -8,17 +8,10 @@ import {
   AlignJustify,
   AlignLeft,
   AlignRight,
-  Baseline,
   Bold,
   Check,
   ChevronsUpDown,
   Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  Heading4,
-  Heading5,
-  Heading6,
   Highlighter,
   Image,
   Italic,
@@ -35,86 +28,46 @@ import {
 } from "lucide-react";
 
 import Popup from "@/components/custom-ui/popup";
-import { useCallback } from "react";
-import { Level } from "@tiptap/extension-heading";
 import { HexColorPicker } from "react-colorful";
 import { Button } from "../ui/button";
 import { Toggle } from "../ui/toggle";
+import { toolbarHeadings, useTiptap } from "./hooks/use-tiptap";
 
 type Props = {
   editor: Editor;
 };
 
-const toolbarHeadings = [
-  { value: "h1", Icon: Heading1, label: "Heading 1" },
-  { value: "h2", Icon: Heading2, label: "Heading 2" },
-  { value: "h3", Icon: Heading3, label: "Heading 3" },
-  { value: "h4", Icon: Heading4, label: "Heading 4" },
-  { value: "h5", Icon: Heading5, label: "Heading 5" },
-  { value: "h6", Icon: Heading6, label: "Heading 6" },
-  { value: "p", Icon: Baseline, label: "Paragraph" },
-];
-
-function getCurrentHeading(editor: Editor) {
-  const attr = editor.getAttributes("heading").level;
-
-  if (attr) return toolbarHeadings[attr];
-
-  return {
-    label: "Paragraph",
-    value: "p",
-  };
-}
-
 export function Toolbar({ editor }: Props) {
-  const onHeadingChange = useCallback(
-    (value: string) => {
-      if (!editor) {
-        return;
-      }
-
-      switch (value) {
-        case "p":
-          editor.chain().focus().setParagraph().run();
-          break;
-
-        default:
-          const level = parseInt(value.charAt(value.length - 1)) as Level;
-          editor.chain().focus().setHeading({ level: level }).run();
-          break;
-      }
-    },
-    [editor]
-  );
-
-  const onChangeColor = useCallback(
-    (color: string) => editor.chain().setColor(color).run(),
-    [editor]
-  );
-
-  const onChangeHighlight = useCallback(
-    (color: string) => editor.chain().setHighlight({ color }).run(),
-    [editor]
-  );
+  const tiptap = useTiptap(editor);
 
   return (
-    <div className="flex items-center flex-wrap gap-2 divide-x border-y py-2">
-      <div className="px-2">
-        <Toggle size="sm">
+    <div className="flex items-center flex-wrap gap-2 divide-x border-y py-2 sticky top-4">
+      <div className="px-2 space-x-0.5">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onUndo}
+          disabled={tiptap.canUndo}
+          pressed={false}
+        >
           <Undo2 className="w-4 h-4" />
         </Toggle>
-        <Toggle size="sm">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onRedo}
+          disabled={tiptap.canRedo}
+          pressed={false}
+        >
           <Redo2 className="w-4 h-4" />
         </Toggle>
       </div>
-      <div className="px-2">
+      <div className="px-2 space-x-0.5">
         <Popup
           variant="popover"
           content={
             <ToggleGroup
               type="single"
-              value={getCurrentHeading(editor).value}
-              onValueChange={(value) => onHeadingChange(value)}
+              value={tiptap.currentHeading.value}
+              onValueChange={(value) => tiptap.onHeadingChange(value)}
               size="sm"
               className="flex flex-col"
             >
@@ -125,7 +78,7 @@ export function Toolbar({ editor }: Props) {
 
                   <Check
                     className={`ml-2 w-4 h-4 ${
-                      getCurrentHeading(editor).value === value
+                      tiptap.currentHeading.value === value
                         ? "opacity-80"
                         : "opacity-0"
                     }`}
@@ -135,90 +88,127 @@ export function Toolbar({ editor }: Props) {
             </ToggleGroup>
           }
         >
-          <Toggle size="sm">
-            {getCurrentHeading(editor).label}
+          <Toggle size="sm" className="w-32">
+            {tiptap.currentHeading.label}
             <ChevronsUpDown className="w-4 h-4 ml-4" />
           </Toggle>
         </Popup>
       </div>
-      <div className="px-2">
-        <Toggle size="sm">
+      <div className="px-2 space-x-0.5">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onBold}
+          pressed={tiptap.isBold}
+        >
           <Bold className="w-4 h-4" />
         </Toggle>
-        <Toggle size="sm">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onItalic}
+          pressed={tiptap.isItalic}
+        >
           <Italic className="w-4 h-4" />
         </Toggle>
-        <Toggle size="sm">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onUnderline}
+          pressed={tiptap.isUnderline}
+        >
           <Underline className="w-4 h-4" />
         </Toggle>
-        <Toggle size="sm">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onStrike}
+          pressed={tiptap.isStrike}
+        >
           <Strikethrough className="w-4 h-4" />
         </Toggle>
       </div>
-      <div className="px-2">
-        <ToggleGroup type="single" size="sm">
-          <ToggleItem value="">
-            <AlignLeft className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <AlignCenter className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <AlignRight className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <AlignJustify className="w-4 h-4" />
-          </ToggleItem>
-        </ToggleGroup>
+      <div className="px-2 space-x-0.5">
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onAlignLeft}
+          pressed={tiptap.isAlignLeft}
+        >
+          <AlignLeft className="w-4 h-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onAlignCenter}
+          pressed={tiptap.isAlignCenter}
+        >
+          <AlignCenter className="w-4 h-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onAlignRight}
+          pressed={tiptap.isAlignRight}
+        >
+          <AlignRight className="w-4 h-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          onPressedChange={tiptap.onAlignJustify}
+          pressed={tiptap.isAlignJustify}
+        >
+          <AlignJustify className="w-4 h-4" />
+        </Toggle>
       </div>
-      <div className="px-2">
-        <ToggleGroup type="multiple" size="sm">
-          <Popup
-            variant="popover"
-            content={
-              <div className="space-y-4">
-                <HexColorPicker
-                  className="w-full"
-                  onChange={onChangeHighlight}
-                />
-                <Toggle
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => editor.chain().focus().unsetHighlight().run()}
-                >
-                  Clear
-                </Toggle>
-              </div>
-            }
-          >
-            <span>
+      <div className="px-2 space-x-0.5">
+        <Popup
+          variant="popover"
+          content={
+            <div className="space-y-4">
+              <HexColorPicker
+                className="w-full"
+                onChange={tiptap.onChangeHighlight}
+              />
               <Toggle
-                pressed={editor.getAttributes("highlight")?.color || false}
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={tiptap.onClearHighlight}
               >
-                <Highlighter className="w-4 h-4" />
+                Clear
               </Toggle>
-            </span>
-          </Popup>
-          <Popup
-            variant="popover"
-            content={
-              <div className="space-y-4">
-                <HexColorPicker className="w-full" onChange={onChangeColor} />
-                <Button variant="outline" size="sm" className="w-full">
-                  Clear
-                </Button>
-              </div>
-            }
-          >
-            <ToggleItem value="1">
+            </div>
+          }
+        >
+          <span>
+            <Toggle size="sm" pressed={tiptap.currentHighlight}>
+              <Highlighter className="w-4 h-4" />
+            </Toggle>
+          </span>
+        </Popup>
+
+        <Popup
+          variant="popover"
+          content={
+            <div className="space-y-4">
+              <HexColorPicker
+                className="w-full"
+                onChange={tiptap.onChangeColor}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={tiptap.onClearColor}
+              >
+                Clear
+              </Button>
+            </div>
+          }
+        >
+          <span>
+            <Toggle size="sm" pressed={tiptap.currentColor}>
               <Palette className="w-4 h-4" />
-            </ToggleItem>
-          </Popup>
-        </ToggleGroup>
+            </Toggle>
+          </span>
+        </Popup>
       </div>
 
-      <div className="px-2">
+      <div className="px-2 space-x-0.5">
         <ToggleGroup type="single" size="sm">
           <ToggleItem value="">
             <List className="w-4 h-4" />
@@ -234,7 +224,8 @@ export function Toolbar({ editor }: Props) {
           </ToggleItem>
         </ToggleGroup>
       </div>
-      <div className="px-2">
+
+      <div className="px-2 space-x-0.5">
         <ToggleGroup type="single" size="sm">
           <ToggleItem value="">
             <Code className="w-4 h-4" />

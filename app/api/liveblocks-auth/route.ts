@@ -8,7 +8,7 @@ import { NextRequest } from "next/server";
 
 const liveblocks = new Liveblocks({
   secret:
-    "sk_prod_tx7A52Z43zBxZtbhU12ZW1UoAHBVVkkv8GO-o_tK_Cfojz55mWSeXZkTekD47XO0",
+    "sk_prod_DWso8uD0zVOpMPv_GRa6ZvL3HVT4JpwSTeEH_WrctEmAkUmctvgjQtbW_2iOTZKx",
 });
 
 export async function POST(request: NextRequest) {
@@ -22,10 +22,11 @@ export async function POST(request: NextRequest) {
   });
 
   // Use a naming pattern to allow access to rooms with a wildcard
-  session.allow(`liveblocks:examples:*`, session.FULL_ACCESS);
+  session.allow(`liveblocks`, session.FULL_ACCESS);
 
   // Authorize the user and return the result
   const { body, status } = await session.authorize();
+
   return new Response(body, { status });
 }
 
