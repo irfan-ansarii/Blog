@@ -4,7 +4,9 @@ import { accounts } from "./accounts";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  accountId: integer("accountId"),
+  accountId: integer("accountId")
+    .notNull()
+    .references(() => accounts.id, { onDelete: "cascade" }),
   firstName: text("first_name"),
   lastName: text("last_name"),
   phone: text("phone").unique(),
@@ -18,7 +20,7 @@ export const users = pgTable("users", {
 });
 
 export const usersRelations = relations(users, ({ one }) => ({
-  author: one(accounts, {
+  account: one(accounts, {
     fields: [users.accountId],
     references: [accounts.id],
   }),

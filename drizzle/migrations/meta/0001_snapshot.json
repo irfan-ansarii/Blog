@@ -1,6 +1,6 @@
 {
-  "id": "6223e6b2-d181-4df4-ba1f-769b7603a56d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "8a12dc6c-eb79-426b-8dd8-732770d2caff",
+  "prevId": "5256c568-626d-43c2-8997-6097cb88b78f",
   "version": "6",
   "dialect": "postgresql",
   "tables": {
@@ -54,7 +54,7 @@
           "name": "accountId",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "first_name": {
           "name": "first_name",
@@ -108,7 +108,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_accountId_accounts_id_fk": {
+          "name": "users_accountId_accounts_id_fk",
+          "tableFrom": "users",
+          "tableTo": "accounts",
+          "columnsFrom": [
+            "accountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "users_phone_unique": {
