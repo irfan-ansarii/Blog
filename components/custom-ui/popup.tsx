@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open?: boolean;
@@ -17,6 +18,7 @@ interface Props {
   content: React.ReactNode;
   children: React.ReactNode;
   variant?: "sheet" | "dialog" | "popover";
+  className?: string;
 }
 const Popup = ({
   open,
@@ -24,6 +26,7 @@ const Popup = ({
   content,
   children,
   variant = "dialog",
+  className,
 }: Props) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -31,7 +34,9 @@ const Popup = ({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent>{content}</DialogContent>
+        <DialogContent className={cn("p-2", className)}>
+          {content}
+        </DialogContent>
       </Dialog>
     );
   }
@@ -40,7 +45,7 @@ const Popup = ({
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>{children}</SheetTrigger>
-        <SheetContent>{content}</SheetContent>
+        <SheetContent className={cn("p-2", className)}>{content}</SheetContent>
       </Sheet>
     );
   }
@@ -48,7 +53,7 @@ const Popup = ({
     return (
       <Popover open={open} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent side="bottom" className="w-auto">
+        <PopoverContent side="bottom" className={cn("w-auto p-2", className)}>
           {content}
         </PopoverContent>
       </Popover>
@@ -58,7 +63,7 @@ const Popup = ({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>{content}</DrawerContent>
+      <DrawerContent className={cn("p-2", className)}>{content}</DrawerContent>
     </Drawer>
   );
 };

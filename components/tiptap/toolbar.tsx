@@ -3,13 +3,16 @@ import {
   ToggleGroup,
   ToggleGroupItem as ToggleItem,
 } from "@/components/ui/toggle-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   AlignCenter,
-  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
+  Brush,
   Check,
+  ChevronDown,
   ChevronsUpDown,
   Code,
   Highlighter,
@@ -21,10 +24,9 @@ import {
   ListTodo,
   Palette,
   Quote,
-  Redo2,
   Strikethrough,
   Underline,
-  Undo2,
+  Video,
   Youtube,
 } from "lucide-react";
 
@@ -35,6 +37,7 @@ import { Toggle } from "../ui/toggle";
 import { toolbarHeadings, useTiptap } from "./hooks/use-tiptap";
 import TooltipToggle from "./tooltip-toggle";
 import YoutubeForm from "./youtube-form";
+import LinkForm from "./link-form";
 
 type Props = {
   editor: Editor;
@@ -43,27 +46,57 @@ type Props = {
 export function Toolbar({ editor }: Props) {
   const tiptap = useTiptap(editor);
 
-  return (
-    <div className="flex items-center flex-wrap gap-2 divide-x border-y py-2 sticky top-4">
-      <div className="px-2 space-x-0.5">
-        <TooltipToggle
-          onChange={tiptap.onUndo}
-          value={false}
-          title="Undo"
-          disabled={tiptap.canUndo}
-        >
-          <Undo2 className="w-4 h-4" />
-        </TooltipToggle>
+  const inlineOptions = [
+    {
+      title: "Bold",
+      Icon: Bold,
+      value: tiptap.isBold,
+      action: tiptap.onBold,
+    },
+    {
+      title: "Italic",
+      Icon: Italic,
+      value: tiptap.isItalic,
+      action: tiptap.onItalic,
+    },
+    {
+      title: "Underline",
+      Icon: Underline,
+      value: tiptap.isUnderline,
+      action: tiptap.onUnderline,
+    },
+    {
+      title: "Strikethrough",
+      Icon: Strikethrough,
+      value: tiptap.isStrike,
+      action: tiptap.onStrike,
+    },
+  ];
 
-        <TooltipToggle
-          onChange={tiptap.onRedo}
-          value={false}
-          title="Redo"
-          disabled={tiptap.canRedo}
-        >
-          <Redo2 className="w-4 h-4" />
-        </TooltipToggle>
-      </div>
+  const alignOptions = [
+    {
+      title: "Left align",
+      Icon: AlignLeft,
+      value: tiptap.isAlignLeft,
+      action: tiptap.onAlignLeft,
+    },
+    {
+      title: "Center align",
+      Icon: AlignCenter,
+      value: tiptap.isAlignCenter,
+      action: tiptap.onAlignCenter,
+    },
+    {
+      title: "Right align",
+      Icon: AlignRight,
+      value: tiptap.isAlignRight,
+      action: tiptap.onAlignRight,
+    },
+  ];
+
+  return (
+    <div className="flex items-center flex-wrap gap-y-2 divide-x border-y py-2 sticky top-4">
+      {/* heading */}
       <div className="px-2 space-x-0.5">
         <Popup
           variant="popover"
@@ -73,15 +106,15 @@ export function Toolbar({ editor }: Props) {
               value={tiptap.currentHeading.value}
               onValueChange={(value) => tiptap.onHeadingChange(value)}
               size="sm"
-              className="flex flex-col"
+              className="flex flex-col items-stretch"
             >
               {toolbarHeadings.map(({ value, Icon, label }) => (
                 <ToggleItem value={value} key={value}>
                   <Icon className="w-4 h-4 mr-2" />
-                  {label}
+                  <span className="mr-3">{label}</span>
 
                   <Check
-                    className={`ml-2 w-4 h-4 ${
+                    className={`ml-auto w-4 h-4 ${
                       tiptap.currentHeading.value === value
                         ? "opacity-80"
                         : "opacity-0"
@@ -99,125 +132,114 @@ export function Toolbar({ editor }: Props) {
         </Popup>
       </div>
 
+      {/* inline options */}
       <div className="px-2 space-x-0.5">
-        <TooltipToggle
-          onChange={tiptap.onBold}
-          value={tiptap.isBold}
-          title="Bold"
-        >
-          <Bold className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onItalic}
-          value={tiptap.isItalic}
-          title="Italic"
-        >
-          <Italic className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onUnderline}
-          value={tiptap.isUnderline}
-          title="Underline"
-        >
-          <Underline className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onStrike}
-          value={tiptap.isStrike}
-          title="Strikethrough"
-        >
-          <Strikethrough className="w-4 h-4" />
-        </TooltipToggle>
+        {inlineOptions.map(({ Icon, ...rest }) => (
+          <TooltipToggle
+            key={rest.title}
+            onChange={rest.action}
+            value={rest.value}
+            title={rest.title}
+          >
+            <Icon className="w-4 h-4" />
+          </TooltipToggle>
+        ))}
       </div>
 
+      {/* alignment */}
       <div className="px-2 space-x-0.5">
-        <TooltipToggle
-          onChange={tiptap.onAlignLeft}
-          value={tiptap.isAlignLeft}
-          title="Align left"
-        >
-          <AlignLeft className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onAlignCenter}
-          value={tiptap.isAlignCenter}
-          title="Align center"
-        >
-          <AlignCenter className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onAlignRight}
-          value={tiptap.isAlignRight}
-          title="Align right"
-        >
-          <AlignRight className="w-4 h-4" />
-        </TooltipToggle>
-        <TooltipToggle
-          onChange={tiptap.onAlignJustify}
-          value={tiptap.isAlignJustify}
-          title="Justify"
-        >
-          <AlignJustify className="w-4 h-4" />
-        </TooltipToggle>
-      </div>
-
-      <div className="px-2 space-x-0.5">
-        <TooltipToggle
-          onChange={tiptap.onAlignJustify}
-          value={tiptap.isAlignJustify}
-          title="Link"
-        >
-          <Link className="w-4 h-4" />
-        </TooltipToggle>
-
         <Popup
           variant="popover"
           content={
-            <div className="space-y-4">
-              <HexColorPicker
-                className="w-full"
-                onChange={tiptap.onChangeHighlight}
-              />
-              <Toggle
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={tiptap.onClearHighlight}
-              >
-                Clear
-              </Toggle>
+            <div className="flex flex-col gap-1">
+              {alignOptions.map(({ Icon, ...rest }) => (
+                <Toggle
+                  key={rest.title}
+                  onPressedChange={rest.action}
+                  pressed={rest.value}
+                  size="sm"
+                  className="justify-start"
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {rest.title}
+                </Toggle>
+              ))}
             </div>
           }
         >
           <span>
-            <TooltipToggle value={tiptap.currentHighlight} title="Highlight">
-              <Highlighter className="w-4 h-4" />
+            <TooltipToggle value={false} title="Alignment">
+              <AlignLeft className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4 ml-2" />
             </TooltipToggle>
           </span>
         </Popup>
+      </div>
+
+      <div className="px-2 space-x-0.5">
+        {/* link */}
+        <LinkForm
+          onLink={tiptap.onLink}
+          onUnlink={tiptap.onUnlink}
+          isLink={tiptap.isLink}
+        >
+          <TooltipToggle
+            value={tiptap.isLink || false}
+            title={tiptap.isLink ? "Edit link" : "Add Link"}
+          >
+            <Link className="w-4 h-4" />
+          </TooltipToggle>
+        </LinkForm>
 
         <Popup
           variant="popover"
           content={
-            <div className="space-y-4">
-              <HexColorPicker
-                className="w-full"
-                onChange={tiptap.onChangeColor}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={tiptap.onClearColor}
-              >
-                Clear
-              </Button>
-            </div>
+            <Tabs defaultValue="foreground">
+              <TabsList className="w-full">
+                <TabsTrigger value="foreground" className="flex-1">
+                  Foreground
+                </TabsTrigger>
+                <TabsTrigger value="background" className="flex-1">
+                  Background
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="foreground" className="space-y-2">
+                <HexColorPicker
+                  className="!w-full"
+                  onChange={tiptap.onChangeColor}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={tiptap.onClearColor}
+                >
+                  Clear
+                </Button>
+              </TabsContent>
+              <TabsContent value="background" className="space-y-2">
+                <HexColorPicker
+                  className="!w-full"
+                  onChange={tiptap.onChangeHighlight}
+                />
+                <Toggle
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={tiptap.onClearHighlight}
+                >
+                  Clear
+                </Toggle>
+              </TabsContent>
+            </Tabs>
           }
         >
           <span>
-            <TooltipToggle value={tiptap.currentColor} title="Color">
-              <Palette className="w-4 h-4" />
+            <TooltipToggle
+              value={tiptap.currentHighlight || tiptap.currentColor}
+              title="Color"
+            >
+              <Brush className="w-4 h-4" />
             </TooltipToggle>
           </span>
         </Popup>
@@ -274,7 +296,7 @@ export function Toolbar({ editor }: Props) {
           }
         >
           <TooltipToggle title="Add video">
-            <Youtube className="w-4 h-4" />
+            <Video className="w-4 h-4" />
           </TooltipToggle>
         </YoutubeForm>
       </div>

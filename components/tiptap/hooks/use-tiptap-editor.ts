@@ -112,8 +112,9 @@ export const useTiptapEditor = (args: any) => {
         },
       }),
       Link.configure({
+        openOnClick: "whenNotEditable",
         HTMLAttributes: {
-          class: buttonVariants({ variant: "link" }),
+          class: "underline text-blue-600",
         },
       }),
       Placeholder.configure({

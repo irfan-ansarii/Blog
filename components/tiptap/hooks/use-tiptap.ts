@@ -73,12 +73,18 @@ export const useTiptap = (editor: Editor) => {
   );
 
   const onLink = useCallback(
-    (url: string, inNewTab?: boolean) =>
+    ({ href, target }: any) =>
       editor
         .chain()
         .focus()
-        .setLink({ href: url, target: inNewTab ? "_blank" : "" })
+        .extendMarkRange("link")
+        .setLink({ href, target })
         .run(),
+    [editor]
+  );
+
+  const onUnlink = useCallback(
+    () => editor.chain().focus().extendMarkRange("link").unsetLink().run(),
     [editor]
   );
 
@@ -160,6 +166,7 @@ export const useTiptap = (editor: Editor) => {
     onChangeHighlight,
     onClearHighlight,
     onLink,
+    onUnlink,
     onHeadingChange,
     onToggleTaskList,
     onToggleBulletList,
@@ -187,6 +194,7 @@ export const useTiptap = (editor: Editor) => {
     isBulletList: editor.isActive("bulletList"),
     isOrderedList: editor.isActive("orderedList"),
     isBlockquote: editor.isActive("blockquote"),
+    isLink: editor.getAttributes("link").href,
   };
 };
 
