@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { RoomProvider } from "@/lib/liveblocks.config";
 import { ClientSideSuspense } from "@liveblocks/react";
+import Loading from "@/components/loading";
 
 export default function LiveblocksProvider({
   children,
@@ -18,7 +19,7 @@ export default function LiveblocksProvider({
         cursor: null,
       }}
     >
-      <ClientSideSuspense fallback={"Loading..."}>
+      <ClientSideSuspense fallback={<Loading />}>
         {() => children}
       </ClientSideSuspense>
     </RoomProvider>

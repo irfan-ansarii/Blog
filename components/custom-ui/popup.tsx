@@ -29,7 +29,7 @@ const Popup = ({
 
   if (isDesktop && variant === "dialog") {
     return (
-      <Dialog>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent>{content}</DialogContent>
       </Dialog>
@@ -38,7 +38,7 @@ const Popup = ({
 
   if (isDesktop && variant === "sheet") {
     return (
-      <Sheet>
+      <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>{children}</SheetTrigger>
         <SheetContent>{content}</SheetContent>
       </Sheet>
@@ -46,7 +46,7 @@ const Popup = ({
   }
   if (isDesktop && variant === "popover") {
     return (
-      <Popover>
+      <Popover open={open} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
         <PopoverContent side="bottom" className="w-auto">
           {content}

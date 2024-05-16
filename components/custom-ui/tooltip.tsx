@@ -39,7 +39,7 @@ const Tooltip = ({
   return (
     <TooltipRoot delayDuration={0}>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent className={cn("p-1", className)}>
+      <TooltipContent className={cn("px-2 py-1", className)}>
         {content}
       </TooltipContent>
     </TooltipRoot>

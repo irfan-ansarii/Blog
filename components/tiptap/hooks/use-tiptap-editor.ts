@@ -3,6 +3,9 @@ import { mergeAttributes, useEditor } from "@tiptap/react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import OrderedList from "@tiptap/extension-ordered-list";
+import BulletList from "@tiptap/extension-bullet-list";
 import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import Youtube from "@tiptap/extension-youtube";
@@ -13,16 +16,13 @@ import { Image } from "@tiptap/extension-image";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import TextColor from "@tiptap/extension-color";
-
-import { TaskItem } from "../task-item";
-
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-
-import { lowlight } from "lowlight";
+import Blockquote from "@tiptap/extension-blockquote";
+import CodeBlock from "@tiptap/extension-code-block";
 
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { useHistory, useSelf } from "@/lib/liveblocks.config";
+import { useSelf } from "@/lib/liveblocks.config";
+import { buttonVariants } from "@/components/ui/button";
 
 const classes: Record<number, string> = {
   1: "text-5xl",
@@ -67,16 +67,6 @@ export const useTiptapEditor = (args: any) => {
     },
     extensions: [
       StarterKit.configure({
-        blockquote: {
-          HTMLAttributes: {
-            class: "tiptap-blockquote",
-          },
-        },
-        code: {
-          HTMLAttributes: {
-            class: "tiptap-code",
-          },
-        },
         codeBlock: {
           languageClassPrefix: "language-",
           HTMLAttributes: {
@@ -84,23 +74,8 @@ export const useTiptapEditor = (args: any) => {
             spellcheck: false,
           },
         },
-        // The Collaboration extension comes with its own history handling
+
         history: false,
-        horizontalRule: {
-          HTMLAttributes: {
-            class: "border-b",
-          },
-        },
-        listItem: {
-          HTMLAttributes: {
-            class: "tiptap-list-item",
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: "tiptap-ordered-list",
-          },
-        },
       }),
       Heading.configure({
         levels: [1, 2, 3, 4, 5],
@@ -125,37 +100,56 @@ export const useTiptapEditor = (args: any) => {
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
-
       Typography,
       Image.configure({
         HTMLAttributes: {
           class: "tiptap-image",
         },
       }),
-      CodeBlockLowlight.configure({
-        lowlight,
-        defaultLanguage: null,
+      CodeBlock.configure({
+        HTMLAttributes: {
+          class: "bg-zinc-900 rounded-md p-4 text-zinc-200",
+        },
       }),
       Link.configure({
         HTMLAttributes: {
-          class: "tiptap-link",
+          class: buttonVariants({ variant: "link" }),
         },
       }),
       Placeholder.configure({
         placeholder: "Start writing…",
-        emptyEditorClass: "tiptap-empty",
       }),
-      TaskItem,
+
       TaskList.configure({
         HTMLAttributes: {
-          class: "tiptap-task-list",
+          class: "flex flex-col",
+        },
+      }),
+      TaskItem.configure({
+        HTMLAttributes: {
+          class: "flex gap-2 items-center",
+        },
+      }),
+      BulletList.configure({
+        HTMLAttributes: {
+          class: "list-disc pl-5",
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: "list-decimal pl-5",
+        },
+      }),
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: "bg-secondary p-3 border-l-4",
         },
       }),
 
       Youtube.configure({
-        modestBranding: true,
+        controls: false,
         HTMLAttributes: {
-          class: "tiptap-youtube",
+          class: "rounded-md",
         },
       }),
       ...collabConfig,

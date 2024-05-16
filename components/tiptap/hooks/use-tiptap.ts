@@ -111,6 +111,36 @@ export const useTiptap = (editor: Editor) => {
     },
     [editor]
   );
+  const onToggleTaskList = useCallback(
+    () => editor.chain().focus().toggleTaskList().run(),
+    [editor]
+  );
+
+  const onToggleBulletList = useCallback(
+    () => editor.chain().focus().toggleBulletList().run(),
+    [editor]
+  );
+  const onToggleOrderedList = useCallback(
+    () => editor.chain().focus().toggleOrderedList().run(),
+    [editor]
+  );
+  const onToggleBlockquote = useCallback(
+    () => editor.chain().focus().toggleBlockquote().run(),
+    [editor]
+  );
+  const onAddVideo = useCallback(
+    ({ src, width = 640, height = 480 }: any) =>
+      editor.commands.setYoutubeVideo({
+        src,
+        width,
+        height,
+      }),
+    [editor]
+  );
+  const onToggleCodeBlock = useCallback(
+    () => editor.chain().focus().toggleCodeBlock().run(),
+    [editor]
+  );
 
   return {
     onUndo,
@@ -131,15 +161,21 @@ export const useTiptap = (editor: Editor) => {
     onClearHighlight,
     onLink,
     onHeadingChange,
+    onToggleTaskList,
+    onToggleBulletList,
+    onToggleOrderedList,
+    onToggleBlockquote,
+    onAddVideo,
+    onToggleCodeBlock,
 
-    canUndo: !editor.can().chain().undo().run(),
-    canRedo: !editor.can().chain().redo().run(),
+    canUndo: editor.can().chain().undo().run(),
+    canRedo: editor.can().chain().redo().run(),
     isBold: editor.isActive("bold"),
     isItalic: editor.isActive("italic"),
     isStrike: editor.isActive("strike"),
     isUnderline: editor.isActive("underline"),
     isCode: editor.isActive("code"),
-    isCodeBlock: editor.isActive("codeblock"),
+    isCodeBlock: editor.isActive("codeBlock"),
     isAlignLeft: editor.isActive({ textAlign: "left" }),
     isAlignCenter: editor.isActive({ textAlign: "center" }),
     isAlignRight: editor.isActive({ textAlign: "right" }),
@@ -147,6 +183,10 @@ export const useTiptap = (editor: Editor) => {
     currentColor: editor.getAttributes("textStyle")?.color || false,
     currentHighlight: editor.getAttributes("highlight")?.color || false,
     currentHeading: getCurrentHeading(editor),
+    isTaskList: editor.isActive("taskList"),
+    isBulletList: editor.isActive("bulletList"),
+    isOrderedList: editor.isActive("orderedList"),
+    isBlockquote: editor.isActive("blockquote"),
   };
 };
 

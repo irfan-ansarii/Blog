@@ -15,6 +15,7 @@ import {
   Highlighter,
   Image,
   Italic,
+  Link,
   List,
   ListOrdered,
   ListTodo,
@@ -32,6 +33,8 @@ import { HexColorPicker } from "react-colorful";
 import { Button } from "../ui/button";
 import { Toggle } from "../ui/toggle";
 import { toolbarHeadings, useTiptap } from "./hooks/use-tiptap";
+import TooltipToggle from "./tooltip-toggle";
+import YoutubeForm from "./youtube-form";
 
 type Props = {
   editor: Editor;
@@ -43,22 +46,23 @@ export function Toolbar({ editor }: Props) {
   return (
     <div className="flex items-center flex-wrap gap-2 divide-x border-y py-2 sticky top-4">
       <div className="px-2 space-x-0.5">
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onUndo}
+        <TooltipToggle
+          onChange={tiptap.onUndo}
+          value={false}
+          title="Undo"
           disabled={tiptap.canUndo}
-          pressed={false}
         >
           <Undo2 className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onRedo}
+        </TooltipToggle>
+
+        <TooltipToggle
+          onChange={tiptap.onRedo}
+          value={false}
+          title="Redo"
           disabled={tiptap.canRedo}
-          pressed={false}
         >
           <Redo2 className="w-4 h-4" />
-        </Toggle>
+        </TooltipToggle>
       </div>
       <div className="px-2 space-x-0.5">
         <Popup
@@ -94,67 +98,78 @@ export function Toolbar({ editor }: Props) {
           </Toggle>
         </Popup>
       </div>
+
       <div className="px-2 space-x-0.5">
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onBold}
-          pressed={tiptap.isBold}
+        <TooltipToggle
+          onChange={tiptap.onBold}
+          value={tiptap.isBold}
+          title="Bold"
         >
           <Bold className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onItalic}
-          pressed={tiptap.isItalic}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onItalic}
+          value={tiptap.isItalic}
+          title="Italic"
         >
           <Italic className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onUnderline}
-          pressed={tiptap.isUnderline}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onUnderline}
+          value={tiptap.isUnderline}
+          title="Underline"
         >
           <Underline className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onStrike}
-          pressed={tiptap.isStrike}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onStrike}
+          value={tiptap.isStrike}
+          title="Strikethrough"
         >
           <Strikethrough className="w-4 h-4" />
-        </Toggle>
+        </TooltipToggle>
       </div>
+
       <div className="px-2 space-x-0.5">
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onAlignLeft}
-          pressed={tiptap.isAlignLeft}
+        <TooltipToggle
+          onChange={tiptap.onAlignLeft}
+          value={tiptap.isAlignLeft}
+          title="Align left"
         >
           <AlignLeft className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onAlignCenter}
-          pressed={tiptap.isAlignCenter}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onAlignCenter}
+          value={tiptap.isAlignCenter}
+          title="Align center"
         >
           <AlignCenter className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onAlignRight}
-          pressed={tiptap.isAlignRight}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onAlignRight}
+          value={tiptap.isAlignRight}
+          title="Align right"
         >
           <AlignRight className="w-4 h-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          onPressedChange={tiptap.onAlignJustify}
-          pressed={tiptap.isAlignJustify}
+        </TooltipToggle>
+        <TooltipToggle
+          onChange={tiptap.onAlignJustify}
+          value={tiptap.isAlignJustify}
+          title="Justify"
         >
           <AlignJustify className="w-4 h-4" />
-        </Toggle>
+        </TooltipToggle>
       </div>
+
       <div className="px-2 space-x-0.5">
+        <TooltipToggle
+          onChange={tiptap.onAlignJustify}
+          value={tiptap.isAlignJustify}
+          title="Link"
+        >
+          <Link className="w-4 h-4" />
+        </TooltipToggle>
+
         <Popup
           variant="popover"
           content={
@@ -175,9 +190,9 @@ export function Toolbar({ editor }: Props) {
           }
         >
           <span>
-            <Toggle size="sm" pressed={tiptap.currentHighlight}>
+            <TooltipToggle value={tiptap.currentHighlight} title="Highlight">
               <Highlighter className="w-4 h-4" />
-            </Toggle>
+            </TooltipToggle>
           </span>
         </Popup>
 
@@ -201,42 +216,67 @@ export function Toolbar({ editor }: Props) {
           }
         >
           <span>
-            <Toggle size="sm" pressed={tiptap.currentColor}>
+            <TooltipToggle value={tiptap.currentColor} title="Color">
               <Palette className="w-4 h-4" />
-            </Toggle>
+            </TooltipToggle>
           </span>
         </Popup>
       </div>
 
       <div className="px-2 space-x-0.5">
-        <ToggleGroup type="single" size="sm">
-          <ToggleItem value="">
-            <List className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <ListOrdered className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <Quote className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <ListTodo className="w-4 h-4" />
-          </ToggleItem>
-        </ToggleGroup>
+        <TooltipToggle
+          value={tiptap.isBulletList}
+          title="Bullet list"
+          onChange={tiptap.onToggleBulletList}
+        >
+          <List className="w-4 h-4" />
+        </TooltipToggle>
+        <TooltipToggle
+          value={tiptap.isOrderedList}
+          onChange={tiptap.onToggleOrderedList}
+          title="Ordered list"
+        >
+          <ListOrdered className="w-4 h-4" />
+        </TooltipToggle>
+        <TooltipToggle
+          value={tiptap.isBlockquote}
+          onChange={tiptap.onToggleBlockquote}
+          title="Blockquote"
+        >
+          <Quote className="w-4 h-4" />
+        </TooltipToggle>
+        <TooltipToggle
+          value={tiptap.isTaskList}
+          onChange={tiptap.onToggleTaskList}
+          title="Todo list"
+        >
+          <ListTodo className="w-4 h-4" />
+        </TooltipToggle>
       </div>
 
       <div className="px-2 space-x-0.5">
-        <ToggleGroup type="single" size="sm">
-          <ToggleItem value="">
-            <Code className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
-            <Image className="w-4 h-4" />
-          </ToggleItem>
-          <ToggleItem value="">
+        <TooltipToggle
+          value={tiptap.isCodeBlock}
+          onChange={tiptap.onToggleCodeBlock}
+          title="Code"
+        >
+          <Code className="w-4 h-4" />
+        </TooltipToggle>
+        <TooltipToggle title="Image">
+          <Image className="w-4 h-4" />
+        </TooltipToggle>
+
+        <YoutubeForm
+          onAddVideo={(v) =>
+            tiptap.onAddVideo({
+              src: v,
+            })
+          }
+        >
+          <TooltipToggle title="Add video">
             <Youtube className="w-4 h-4" />
-          </ToggleItem>
-        </ToggleGroup>
+          </TooltipToggle>
+        </YoutubeForm>
       </div>
     </div>
   );

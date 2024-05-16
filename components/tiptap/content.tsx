@@ -4,12 +4,13 @@ import { ClientSideSuspense } from "@liveblocks/react";
 import { EditorContent } from "@tiptap/react";
 import { useTiptapEditor } from "./hooks/use-tiptap-editor";
 import { Toolbar } from "./toolbar";
+import Loading from "@/components/loading";
 
 const Content = ({ doc, provider }: any) => {
   const editor = useTiptapEditor({ doc, provider });
   if (!editor) return;
   return (
-    <ClientSideSuspense fallback={"Loading editor..."}>
+    <ClientSideSuspense fallback={<Loading />}>
       {() => (
         <div className="relativ flex flex-col flex-1 overflow-hidden">
           <Toolbar editor={editor!} />

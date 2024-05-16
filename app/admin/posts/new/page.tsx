@@ -73,8 +73,6 @@ const PostForm = () => {
               />
             </div>
 
-            {/* edito goes here */}
-
             <TiptapEditor />
           </div>
 
