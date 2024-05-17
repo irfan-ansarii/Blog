@@ -3,6 +3,7 @@ import { serial, text, timestamp, pgTable, integer } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { accounts } from "./accounts";
 import { posts } from "./posts";
+import { createInsertSchema } from "drizzle-zod";
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
@@ -23,15 +24,12 @@ export const categories = pgTable("categories", {
     .$onUpdate(() => new Date()),
 });
 
-export const categoriesRelations = relations(categories, ({ one }) => ({
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
   account: one(accounts, {
     fields: [categories.accountId],
     references: [accounts.id],
   }),
-  post: one(posts, {
-    fields: [categories.id],
-    references: [posts.id],
-  }),
+  posts: many(posts),
   createdBy: one(users, {
     fields: [categories.createdBy],
     references: [users.id],
@@ -41,3 +39,5 @@ export const categoriesRelations = relations(categories, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const categoryCreateSchema = createInsertSchema(categories);

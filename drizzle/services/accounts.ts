@@ -22,10 +22,13 @@ export const getAccounts = async (params: Record<string, string>) => {
     .leftJoin(users, eq(users.accountId, accounts.id));
 };
 
-export const updateAccount = async (id: any, args: Record<string, string>) => {
+export const updateAccount = async (
+  id: any,
+  params: Record<string, string>
+) => {
   return await db
     .update(accounts)
-    .set(args)
+    .set(params)
     .where(eq(accounts.id, id))
     .returning()
     .then(findFirst);

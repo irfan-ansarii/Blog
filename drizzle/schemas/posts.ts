@@ -7,17 +7,19 @@ import {
   integer,
   boolean,
   json,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { accounts } from "./accounts";
 import { users } from "./users";
 import { categories } from "./categories";
+import { createInsertSchema } from "drizzle-zod";
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   accountId: integer("account_id")
     .notNull()
     .references(() => accounts.id, { onDelete: "cascade" }),
-  title: text("title"),
+  title: text("title").notNull(),
   slug: text("slug").unique(),
   thumbnail: text("thumbnail"),
   content: text("content"),
@@ -25,10 +27,10 @@ export const posts = pgTable("posts", {
   isProtected: boolean("is_protected").default(false),
   password: text("password"),
   createdBy: integer("created_by").references(() => users.id, {
-    onDelete: "cascade",
+    onDelete: "set null",
   }),
   updatedBy: integer("updated_by").references(() => users.id, {
-    onDelete: "cascade",
+    onDelete: "set null",
   }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
@@ -51,3 +53,20 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
   categories: many(categories),
 }));
+
+export const postsToCategories = pgTable(
+  "posts_to_categories",
+  {
+    postId: integer("post_id")
+      .notNull()
+      .references(() => posts.id),
+    categoryId: integer("category_id")
+      .notNull()
+      .references(() => categories.id),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.postId, t.categoryId] }),
+  })
+);
+
+export const postCreateSchema = createInsertSchema(posts);
