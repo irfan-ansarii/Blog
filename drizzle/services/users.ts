@@ -1,30 +1,12 @@
 "use server";
+import { z } from "zod";
+
 import { db, errorHandler, findFirst } from "../db";
 import { accounts, users } from "../schemas";
+import { userCreateSchema } from "../schemas";
 
-export async function createUser() {
-  return errorHandler(async () => {
-    const acc = await db
-      .insert(accounts)
-      .values({
-        name: "Account Name",
-      })
-      .returning()
-      .then(findFirst);
-
-    const user = await db
-      .insert(users)
-      .values({
-        firstName: "Irfan",
-        lastName: "Ansari",
-        phone: " 9958367688",
-        email: "irfanansari",
-        accountId: acc.id,
-      })
-      .returning();
-
-    return user;
-  });
+export async function createUser(values: z.infer<typeof userCreateSchema>) {
+  const user = await db.insert(users).values(values).returning();
 }
 
 export async function getUser() {

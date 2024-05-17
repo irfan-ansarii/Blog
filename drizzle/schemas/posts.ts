@@ -44,12 +44,10 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   createdBy: one(users, {
     fields: [posts.createdBy],
     references: [users.id],
-    relationName: "createdd_by",
   }),
   updatedBy: one(users, {
     fields: [posts.createdBy],
     references: [users.id],
-    relationName: "updated_by",
   }),
   categories: many(categories),
 }));

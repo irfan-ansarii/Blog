@@ -7,7 +7,6 @@ import TaskItem from "@tiptap/extension-task-item";
 import OrderedList from "@tiptap/extension-ordered-list";
 import BulletList from "@tiptap/extension-bullet-list";
 import TextAlign from "@tiptap/extension-text-align";
-import Typography from "@tiptap/extension-typography";
 import Youtube from "@tiptap/extension-youtube";
 import Highlight from "@tiptap/extension-highlight";
 import StarterKit from "@tiptap/starter-kit";
@@ -22,7 +21,6 @@ import CodeBlock from "@tiptap/extension-code-block";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { useSelf } from "@/lib/liveblocks.config";
-import { buttonVariants } from "@/components/ui/button";
 
 const classes: Record<number, string> = {
   1: "text-5xl",
@@ -100,7 +98,7 @@ export const useTiptapEditor = (args: any) => {
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
-      Typography,
+
       Image.configure({
         HTMLAttributes: {
           class: "tiptap-image",

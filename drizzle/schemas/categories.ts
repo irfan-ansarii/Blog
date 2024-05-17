@@ -35,11 +35,9 @@ export const categoriesRelations = relations(categories, ({ one }) => ({
   createdBy: one(users, {
     fields: [categories.createdBy],
     references: [users.id],
-    relationName: "created_by",
   }),
   updatedBy: one(users, {
     fields: [categories.createdBy],
     references: [users.id],
-    relationName: "updated_by",
   }),
 }));

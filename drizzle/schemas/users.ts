@@ -2,6 +2,8 @@ import { relations } from "drizzle-orm";
 import { serial, text, timestamp, pgTable, integer } from "drizzle-orm/pg-core";
 import { accounts } from "./accounts";
 
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   accountId: integer("accountId")
@@ -11,6 +13,9 @@ export const users = pgTable("users", {
   lastName: text("last_name"),
   phone: text("phone").unique(),
   email: text("email").unique(),
+  role: text("role")
+    .$type<"super" | "admin" | "author" | "editor" | "guest">()
+    .default("guest"),
   password: text("password"),
   otp: text("otp"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -25,3 +30,5 @@ export const usersRelations = relations(users, ({ one }) => ({
     references: [accounts.id],
   }),
 }));
+
+export const userCreateSchema = createInsertSchema(users);

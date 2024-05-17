@@ -5,6 +5,9 @@ import { users } from "./users";
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
   name: text("name"),
+  plan: text("plan").$type<["starter", "pro", "enterprise"]>(),
+  planCreatedAt: timestamp("plan_created_at"),
+  planExpiresAt: timestamp("plan_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

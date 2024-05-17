@@ -1,34 +1,32 @@
 import { Liveblocks } from "@liveblocks/node";
-import { NextRequest } from "next/server";
+import { Hono } from "hono";
 
-/**
- * Authenticating your Liveblocks application
- * https://liveblocks.io/docs/authentication
- */
+const secret =
+  "sk_prod_DWso8uD0zVOpMPv_GRa6ZvL3HVT4JpwSTeEH_WrctEmAkUmctvgjQtbW_2iOTZKx";
+
+const app = new Hono();
 
 const liveblocks = new Liveblocks({
-  secret:
-    "sk_prod_DWso8uD0zVOpMPv_GRa6ZvL3HVT4JpwSTeEH_WrctEmAkUmctvgjQtbW_2iOTZKx",
+  secret,
 });
 
-export async function POST(request: NextRequest) {
-  // Get the current user's unique id from your database
+app.post("/", async (c) => {
   const userId = Math.floor(Math.random() * 10) % USER_INFO.length;
 
-  // Create a session for the current user
-  // userInfo is made available in Liveblocks presence hooks, e.g. useOthers
   const session = liveblocks.prepareSession(`user-${userId}`, {
     userInfo: USER_INFO[userId],
   });
 
-  // Use a naming pattern to allow access to rooms with a wildcard
   session.allow(`liveblocks`, session.FULL_ACCESS);
 
-  // Authorize the user and return the result
   const { body, status } = await session.authorize();
 
-  return new Response(body, { status });
-}
+  return c.json(JSON.parse(body), {
+    status,
+  });
+});
+
+export default app;
 
 const USER_INFO = [
   {
