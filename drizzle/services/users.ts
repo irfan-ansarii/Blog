@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db, findFirst } from "../db";
 import { accounts, users } from "../schemas";
 import { userCreateSchema } from "../schemas";
@@ -12,12 +12,19 @@ export async function createUser(values: z.infer<typeof userCreateSchema>) {
     .then(findFirst);
 }
 
-export async function getUser(id: any) {
+export async function getUser(id: any, params?: Record<string, string>) {
+  const { phone, email } = params || {};
   return await db
     .select()
     .from(users)
     .leftJoin(accounts, eq(users.accountId, accounts.id))
-    .where(eq(users.id, id))
+    .where(
+      or(
+        id ? eq(users.id, id) : undefined,
+        phone ? eq(users.phone, phone) : undefined,
+        email ? eq(users.email, email) : undefined
+      )
+    )
     .then(findFirst);
 }
 

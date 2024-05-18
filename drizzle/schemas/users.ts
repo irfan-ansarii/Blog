@@ -8,6 +8,8 @@ import { createInsertSchema } from "drizzle-zod";
 
 const roles = ["super", "admin", "author", "editor", "guest"] as const;
 
+const status = ["invited", "active", "blocked"] as const;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   accountId: integer("accountId")
@@ -18,6 +20,7 @@ export const users = pgTable("users", {
   phone: text("phone").unique(),
   email: text("email").unique(),
   role: text("role", { enum: roles }).default("guest").notNull(),
+  status: text("status", { enum: status }).default("active").notNull(),
   password: text("password"),
   otp: text("otp"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -36,5 +39,4 @@ export const usersRelations = relations(users, ({ one }) => ({
 export const userCreateSchema = createInsertSchema(users, {
   email: (schema) => schema.email.email(),
   phone: z.string().length(10),
-  role: z.enum(roles),
 });
