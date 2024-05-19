@@ -3,8 +3,11 @@ import { Hono } from "hono";
 const app = new Hono();
 
 app.get("/", (c, next) => {
+  const payload = c.get("jwtPayload");
+
   return c.json({
     message: `all users`,
+    payload,
   });
 });
 app.get("/me", (c) => {

@@ -3,7 +3,29 @@ import { db, findFirst } from "../db";
 import { accounts, users } from "../schemas";
 
 export const createAccount = async (values: Record<string, string>) => {
-  return await db.insert(accounts).values(values).returning().then(findFirst);
+  const { accountName, firstName, lastName, phone, email, password } = values;
+
+  return await db.transaction(async (tx) => {
+    const account = await tx
+      .insert(accounts)
+      .values({ name: accountName })
+      .returning()
+      .then(findFirst);
+
+    const user = await tx
+      .insert(users)
+      .values({
+        accountId: account.id,
+        firstName,
+        lastName,
+        phone,
+        email,
+        password,
+      })
+      .returning()
+      .then(findFirst);
+    return { ...account, ...user };
+  });
 };
 
 export const getAccount = async (id: any) => {
