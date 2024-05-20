@@ -1,25 +1,9 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Client } from "pg";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 
-import * as schema from "./schemas/index";
+export const sql = neon(process.env.NEON_DATABASE_URL!);
 
-const client = new Client({
-  connectionString: "postgres://root:root@localhost:5432/blog",
-});
-
-export const db = (() => {
-  client
-    .connect()
-    .then(() => {
-      console.info("Connected to databse");
-    })
-    .catch((err) => {
-      console.error("Failed to connect to the database.");
-
-      process.exit(0);
-    });
-  return drizzle(client, { schema: { ...schema } });
-})();
+export const db = drizzle(sql);
 
 export const findFirst = <T>(values: T[]): T => {
   return values[0]!;

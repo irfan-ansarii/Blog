@@ -5,27 +5,28 @@ import { accounts, users } from "../schemas";
 export const createAccount = async (values: Record<string, string>) => {
   const { accountName, firstName, lastName, phone, email, password } = values;
 
-  return await db.transaction(async (tx) => {
-    const account = await tx
-      .insert(accounts)
-      .values({ name: accountName })
-      .returning()
-      .then(findFirst);
+  const account = await db
+    .insert(accounts)
+    .values({ name: accountName })
+    .returning()
+    .then(findFirst);
 
-    const user = await tx
-      .insert(users)
-      .values({
-        accountId: account.id,
-        firstName,
-        lastName,
-        phone,
-        email,
-        password,
-      })
-      .returning()
-      .then(findFirst);
-    return { ...account, ...user };
-  });
+  const user = await db
+    .insert(users)
+    .values({
+      accountId: account.id,
+      firstName,
+      lastName,
+      phone,
+      email,
+      password,
+    })
+    .returning()
+    .then(findFirst);
+  return { ...account, ...user };
+  // return await db.transaction(async (tx) => {
+
+  // });
 };
 
 export const getAccount = async (id: any) => {

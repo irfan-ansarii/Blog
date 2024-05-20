@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1715865400823,
-      "tag": "0000_charming_kang",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1715885548587,
-      "tag": "0001_lucky_omega_sentinel",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1715885640446,
-      "tag": "0002_secret_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1715889542363,
-      "tag": "0003_careful_skrulls",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1715972180755,
-      "tag": "0004_quiet_random",
+      "when": 1716207151507,
+      "tag": "0000_sour_lady_deathstrike",
       "breakpoints": true
     }
   ]

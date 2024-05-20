@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { decode, sign, verify } from "hono/jwt";
+import { sign } from "hono/jwt";
 import { ZodSchema, z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
+
 import bcrypt from "bcrypt";
 import { sanitizeOutput } from "@/lib/utils";
 
@@ -59,7 +60,9 @@ const otpVerifySchema = withEmailOrPhone(
 
 const app = new Hono();
 
-// signup
+/********************************************************************* */
+/**                           SIGNUP ROUTE                             */
+/********************************************************************* */
 app.post("/signup", zValidator("json", signupSchema), async (c, next) => {
   const values = c.req.valid("json");
   const { phone, email, password } = values;
@@ -67,11 +70,12 @@ app.post("/signup", zValidator("json", signupSchema), async (c, next) => {
   const userExist = await getUser(undefined, { email, phone });
 
   if (userExist) {
-    let message = "Email already exist";
+    let message = "Email already registered";
+    if (userExist.phone === phone) message = "Phone already registered";
     return c.json({ name: "Bad request", message }, 400);
   }
+  // var salt = bcryptjs.genSaltSync(10);
 
-  // hash the password
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const userAccount = await createAccount({
@@ -87,7 +91,10 @@ app.post("/signup", zValidator("json", signupSchema), async (c, next) => {
   });
 });
 
-// signin with email/phone and password
+/********************************************************************* */
+/**                           SIGNIN ROUTE                             */
+/********************************************************************* */
+
 app.post("/signin", zValidator("json", signinSchema), async (c) => {
   const data = c.req.valid("json");
   const { phone, email, password } = data;
@@ -110,22 +117,24 @@ app.post("/signin", zValidator("json", signinSchema), async (c) => {
     accountId: userData.accountId,
     role: userData.role,
     plan: userData.plan,
-    exp: Math.floor(Date.now() / 1000) + 60 * 5,
+    exp: "30d",
   };
 
   const sanitized = sanitizeOutput(userData, { otp: true, password: true });
-  // there is some error while sigining jwt
-  // const token = await sign(payload, secret);
+
+  const token = await sign(payload, "secret");
 
   return c.json({
     data: {
-      // token,
+      token,
       ...sanitized,
     },
   });
 });
 
-// generate otp
+/********************************************************************* */
+/**                       SIGNIN WITH OTP ROUTE                        */
+/********************************************************************* */
 app.post("/signin/otp", zValidator("json", otpLoginSchema), async (c) => {
   const data = c.req.valid("json");
   const { email, phone } = data;
@@ -151,7 +160,9 @@ app.post("/signin/otp", zValidator("json", otpLoginSchema), async (c) => {
   });
 });
 
-// verify otp
+/********************************************************************* */
+/**                          VERIFY OTP ROUTE                          */
+/********************************************************************* */
 app.post("/signin/verify", zValidator("json", otpVerifySchema), async (c) => {
   const data = c.req.valid("json");
   const { email, phone, otp } = data;
@@ -184,11 +195,12 @@ app.post("/signin/verify", zValidator("json", otpVerifySchema), async (c) => {
     exp: Math.floor(Date.now() / 1000) + 60 * 5,
   };
 
+  const token = await sign(payload, "secret");
   const sanitized = sanitizeOutput(userData, { otp: true, password: true });
 
   return c.json({
     data: {
-      // token,
+      token,
       ...sanitized,
     },
   });
