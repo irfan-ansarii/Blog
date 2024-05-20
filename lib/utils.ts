@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
+import { Context, Next } from "hono";
 import { twMerge } from "tailwind-merge";
 
 interface SanitizeProps {
@@ -7,6 +8,21 @@ interface SanitizeProps {
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const isAuthorized = async (c: Context, next: Next) => {
+  const { role } = c.get("jwtPayload");
+
+  if (role !== "admin" && role !== "super") {
+    return c.json(
+      {
+        message: "you nedd higher level permission",
+      },
+      400
+    );
+  }
+
+  return await next();
+};
 
 export const sanitizeOutput = <T extends SanitizeProps>(
   data: T | T[],

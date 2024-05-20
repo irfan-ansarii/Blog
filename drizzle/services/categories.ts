@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and, getTableColumns, or, count, sql } from "drizzle-orm";
 import { db, findFirst } from "../db";
 import {
   categories,
@@ -18,48 +18,59 @@ export async function createCategory(
     .then(findFirst);
 }
 
-export async function getCategory(id: any) {
+export async function getCategory(id: any, params?: Record<string, any>) {
+  const { slug } = params || {};
+
   return await db
-    .select()
+    .select({
+      ...getTableColumns(categories),
+      postCount: count(posts),
+    })
     .from(categories)
-    .innerJoin(
+    .leftJoin(
       postsToCategories,
       eq(postsToCategories.categoryId, categories.id)
     )
     .leftJoin(posts, eq(posts.id, postsToCategories.postId))
-    .where(eq(categories.id, id))
+    .where(
+      or(
+        id ? eq(categories.id, id) : undefined,
+        slug ? eq(categories.slug, slug) : undefined
+      )
+    )
+    .groupBy(categories.id)
     .then(findFirst);
 }
 
-export async function getCategoryBySlug(slug: string) {
+export async function getCategories(params: Record<string, any>) {
+  const { accountId, title, slug } = params;
+
   return await db
-    .select()
+    .select({
+      ...getTableColumns(categories),
+      postCount: count(posts),
+    })
     .from(categories)
-    .innerJoin(
+    .leftJoin(
       postsToCategories,
       eq(postsToCategories.categoryId, categories.id)
     )
     .leftJoin(posts, eq(posts.id, postsToCategories.postId))
-    .where(eq(categories.slug, slug))
-    .then(findFirst);
-}
-
-export async function getCategories(params: Record<string, string>) {
-  return await db
-    .select()
-    .from(categories)
-    .innerJoin(
-      postsToCategories,
-      eq(postsToCategories.categoryId, categories.id)
+    .where(
+      and(
+        accountId ? eq(categories.accountId, accountId) : undefined,
+        or(
+          title ? eq(categories.title, title) : undefined,
+          slug ? eq(categories.slug, slug) : undefined
+        )
+      )
     )
-    .leftJoin(posts, eq(posts.id, postsToCategories.postId))
-
-    .then(findFirst);
+    .groupBy(categories.id);
 }
 
 export const updateCategory = async (
   id: any,
-  params: Record<string, string>
+  params: z.infer<typeof categoryCreateSchema>
 ) => {
   return await db
     .update(categories)

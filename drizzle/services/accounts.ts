@@ -24,25 +24,22 @@ export const createAccount = async (values: Record<string, string>) => {
     .returning()
     .then(findFirst);
   return { ...account, ...user };
-  // return await db.transaction(async (tx) => {
-
-  // });
 };
 
 export const getAccount = async (id: any) => {
   return await db
     .select()
     .from(accounts)
-    .leftJoin(users, eq(users.accountId, accounts.id))
     .where(eq(accounts.id, id))
     .then(findFirst);
 };
 
-export const getAccounts = async (params: Record<string, string>) => {
+export const getAccounts = async (params: Record<string, any>) => {
+  const { name } = params;
   return await db
     .select()
     .from(accounts)
-    .leftJoin(users, eq(users.accountId, accounts.id));
+    .where(name ? eq(accounts.name, name) : undefined);
 };
 
 export const updateAccount = async (

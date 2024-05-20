@@ -5,7 +5,6 @@ import { zValidator } from "@hono/zod-validator";
 import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
 
-import bcrypt from "bcrypt";
 import { sanitizeOutput } from "@/lib/utils";
 
 const generateOTP = () => {
@@ -58,152 +57,154 @@ const otpVerifySchema = withEmailOrPhone(
     .strict()
 );
 
-const app = new Hono();
+const app = new Hono()
 
-/********************************************************************* */
-/**                           SIGNUP ROUTE                             */
-/********************************************************************* */
-app.post("/signup", zValidator("json", signupSchema), async (c, next) => {
-  const values = c.req.valid("json");
-  const { phone, email, password } = values;
+  /********************************************************************* */
+  /**                           SIGNUP ROUTE                             */
+  /********************************************************************* */
+  .post("/signup", zValidator("json", signupSchema), async (c, next) => {
+    const values = c.req.valid("json");
+    const { phone, email, password } = values;
 
-  const userExist = await getUser(undefined, { email, phone });
+    const userExist = await getUser(undefined, { email, phone });
 
-  if (userExist) {
-    let message = "Email already registered";
-    if (userExist.phone === phone) message = "Phone already registered";
-    return c.json({ name: "Bad request", message }, 400);
-  }
-  // var salt = bcryptjs.genSaltSync(10);
+    if (userExist) {
+      let message = "Email already registered";
+      if (userExist.phone === phone) message = "Phone already registered";
+      return c.json({ name: "Bad request", message }, 400);
+    }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+    const userAccount = await createAccount({
+      ...values,
+    });
 
-  const userAccount = await createAccount({
-    ...values,
-    password: hashedPassword,
+    // sanitize the output
+    const sanitized = sanitizeOutput(userAccount, {
+      password: true,
+      otp: true,
+    });
+
+    return c.json({
+      data: sanitized,
+    });
+  })
+
+  /********************************************************************* */
+  /**                           SIGNIN ROUTE                             */
+  /********************************************************************* */
+
+  .post("/signin", zValidator("json", signinSchema), async (c) => {
+    const data = c.req.valid("json");
+    const { phone, email, password } = data;
+
+    const userData = await getUser(undefined, { phone: phone!, email: email! });
+
+    if (!userData) {
+      return c.json(
+        { name: "Bad request", message: "Invalid email or password" },
+        400
+      );
+    }
+
+    if (userData.password !== password) {
+      return c.json(
+        { name: "Bad request", message: "Incorrect password" },
+        400
+      );
+    }
+    const payload = {
+      id: userData.id,
+      accountId: userData.accountId,
+      role: userData.role,
+      plan: userData.plan,
+      exp: "30d",
+    };
+
+    const sanitized = sanitizeOutput(userData, { otp: true, password: true });
+
+    const token = await sign(payload, "secret");
+
+    return c.json({
+      data: {
+        token,
+        ...sanitized,
+      },
+    });
+  })
+
+  /********************************************************************* */
+  /**                       SIGNIN WITH OTP ROUTE                        */
+  /********************************************************************* */
+  .post("/signin/otp", zValidator("json", otpLoginSchema), async (c) => {
+    const data = c.req.valid("json");
+    const { email, phone } = data;
+
+    const userData = await getUser(undefined, { phone: phone!, email: email! });
+
+    if (!userData) {
+      return c.json(
+        { name: "Bad request", message: "User is not registered" },
+        400
+      );
+    }
+    const otp = generateOTP();
+
+    const r = await updateUser(userData.id, { otp });
+
+    return c.json({
+      data: {
+        ...r,
+        phone,
+        email,
+      },
+    });
+  })
+
+  /********************************************************************* */
+  /**                          VERIFY OTP ROUTE                          */
+  /********************************************************************* */
+  .post("/signin/verify", zValidator("json", otpVerifySchema), async (c) => {
+    const data = c.req.valid("json");
+    const { email, phone, otp } = data;
+
+    const userData = await getUser(undefined, { phone: phone!, email: email! });
+
+    if (!userData) {
+      return c.json(
+        { name: "Bad request", message: "User is not registered" },
+        400
+      );
+    }
+
+    if (!userData.otp) {
+      return c.json({ name: "Bad request", message: "invalid request" }, 400);
+    }
+
+    if (userData.otp !== otp) {
+      return c.json({ name: "Bad request", message: "invalid otp" }, 400);
+    }
+
+    await updateUser(userData.id, { otp: "" });
+
+    // sign jwt and return
+    const payload = {
+      id: userData.id,
+      accountId: userData.accountId,
+      role: userData.role,
+      plan: userData.plan,
+      exp: Math.floor(Date.now() / 1000) + 60 * 5,
+    };
+
+    const token = await sign(payload, "secret");
+
+    const sanitized = sanitizeOutput(userData, { otp: true, password: true });
+
+    return c.json({
+      data: {
+        token,
+        ...sanitized,
+      },
+    });
   });
-
-  // sanitize the output
-  const sanitized = sanitizeOutput(userAccount, { password: true, otp: true });
-
-  return c.json({
-    data: sanitized,
-  });
-});
-
-/********************************************************************* */
-/**                           SIGNIN ROUTE                             */
-/********************************************************************* */
-
-app.post("/signin", zValidator("json", signinSchema), async (c) => {
-  const data = c.req.valid("json");
-  const { phone, email, password } = data;
-
-  const userData = await getUser(undefined, { phone: phone!, email: email! });
-
-  if (!userData) {
-    return c.json(
-      { name: "Bad request", message: "User is not registered" },
-      400
-    );
-  }
-  const isValid = await bcrypt.compareSync(password, userData.password!);
-
-  if (!isValid)
-    return c.json({ name: "Bad request", message: "Incorrect password" }, 400);
-
-  const payload = {
-    id: userData.id,
-    accountId: userData.accountId,
-    role: userData.role,
-    plan: userData.plan,
-    exp: "30d",
-  };
-
-  const sanitized = sanitizeOutput(userData, { otp: true, password: true });
-
-  const token = await sign(payload, "secret");
-
-  return c.json({
-    data: {
-      token,
-      ...sanitized,
-    },
-  });
-});
-
-/********************************************************************* */
-/**                       SIGNIN WITH OTP ROUTE                        */
-/********************************************************************* */
-app.post("/signin/otp", zValidator("json", otpLoginSchema), async (c) => {
-  const data = c.req.valid("json");
-  const { email, phone } = data;
-
-  const userData = await getUser(undefined, { phone: phone!, email: email! });
-
-  if (!userData) {
-    return c.json(
-      { name: "Bad request", message: "User is not registered" },
-      400
-    );
-  }
-  const otp = generateOTP();
-
-  const r = await updateUser(userData.id, { otp });
-
-  return c.json({
-    data: {
-      ...r,
-      phone,
-      email,
-    },
-  });
-});
-
-/********************************************************************* */
-/**                          VERIFY OTP ROUTE                          */
-/********************************************************************* */
-app.post("/signin/verify", zValidator("json", otpVerifySchema), async (c) => {
-  const data = c.req.valid("json");
-  const { email, phone, otp } = data;
-
-  const userData = await getUser(undefined, { phone: phone!, email: email! });
-
-  if (!userData) {
-    return c.json(
-      { name: "Bad request", message: "User is not registered" },
-      400
-    );
-  }
-
-  if (!userData.otp) {
-    return c.json({ name: "Bad request", message: "invalid request" }, 400);
-  }
-
-  if (userData.otp !== otp) {
-    return c.json({ name: "Bad request", message: "invalid otp" }, 400);
-  }
-
-  await updateUser(userData.id, { otp: "" });
-
-  // sign jwt and return
-  const payload = {
-    id: userData.id,
-    accountId: userData.accountId,
-    role: userData.role,
-    plan: userData.plan,
-    exp: Math.floor(Date.now() / 1000) + 60 * 5,
-  };
-
-  const token = await sign(payload, "secret");
-  const sanitized = sanitizeOutput(userData, { otp: true, password: true });
-
-  return c.json({
-    data: {
-      token,
-      ...sanitized,
-    },
-  });
-});
 
 export default app;

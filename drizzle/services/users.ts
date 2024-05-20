@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, getTableColumns, or } from "drizzle-orm";
+import { eq, getTableColumns, or, and } from "drizzle-orm";
 import { db, findFirst } from "../db";
 import { accounts, users } from "../schemas";
 import { userCreateSchema } from "../schemas";
@@ -35,11 +35,37 @@ export async function getUser(id: any, params?: Record<string, string>) {
     .then(findFirst);
 }
 
-export async function getUsers(params: Record<string, string>) {
+export async function getUsers(params: Record<string, any>) {
+  const {
+    accountId = undefined,
+    firstName,
+    lastName,
+    phone,
+    email,
+    accountName,
+  } = params;
   return await db
-    .select()
+    .select({
+      ...getTableColumns(users),
+      accountName: accounts.name,
+      plan: accounts.plan,
+      planCreatedAt: accounts.planCreatedAt,
+      planExpiresAt: accounts.planExpiresAt,
+    })
     .from(users)
     .leftJoin(accounts, eq(users.accountId, accounts.id))
+    .where(
+      and(
+        accountId ? eq(users.accountId, accountId) : undefined,
+        or(
+          firstName ? eq(users.firstName, firstName) : undefined,
+          lastName ? eq(users.lastName, lastName) : undefined,
+          phone ? eq(users.phone, phone) : undefined,
+          email ? eq(users.email, email) : undefined,
+          accountName ? eq(accounts.name, accountName) : undefined
+        )
+      )
+    )
     .then(findFirst);
 }
 
