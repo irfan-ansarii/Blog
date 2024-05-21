@@ -13,7 +13,7 @@ const generateOTP = () => {
 };
 
 // signup schema
-const signupSchema = z.strictObject({
+const signupSchema = z.object({
   accountName: z.string().min(5),
   firstName: z.string().min(2),
   lastName: z.string().min(1),
@@ -39,22 +39,18 @@ const withEmailOrPhone = <T extends ZodSchema>(schema: T) =>
 
 // Signin schema with additional password field
 const signinSchema = withEmailOrPhone(
-  baseAuthSchema
-    .extend({
-      password: z.string(),
-    })
-    .strict()
+  baseAuthSchema.extend({
+    password: z.string(),
+  })
 );
 // OTP login schema
-const otpLoginSchema = withEmailOrPhone(baseAuthSchema.strict());
+const otpLoginSchema = withEmailOrPhone(baseAuthSchema);
 
 // OTP verify schema with additional otp field
 const otpVerifySchema = withEmailOrPhone(
-  baseAuthSchema
-    .extend({
-      otp: z.string(),
-    })
-    .strict()
+  baseAuthSchema.extend({
+    otp: z.string(),
+  })
 );
 
 const app = new Hono()

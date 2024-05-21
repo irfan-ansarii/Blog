@@ -12,6 +12,7 @@ import { zValidator } from "@hono/zod-validator";
 import { categoryCreateSchema } from "@/drizzle/schemas";
 
 import { DELETE_ROLES } from "./utils";
+
 const categorySchema = categoryCreateSchema.pick({
   title: true,
   slug: true,

@@ -37,6 +37,8 @@ export const usersRelations = relations(users, ({ one }) => ({
 }));
 
 export const userCreateSchema = createInsertSchema(users, {
-  email: (schema) => schema.email.email(),
-  phone: z.string().length(10),
+  email: z.string().email({ message: "Invalid email" }),
+  phone: z.string().regex(/^\d{6,14}$/, {
+    message: "Invalid phone number",
+  }),
 });

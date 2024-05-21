@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, or, and, getTableColumns, asc, desc } from "drizzle-orm";
+
 import { db, findFirst } from "../db";
 import {
   categories,
@@ -9,39 +10,78 @@ import {
 } from "../schemas";
 
 export async function createPost(values: z.infer<typeof postCreateSchema>) {
-  return await db
+  const post = await db
     .insert(posts)
     .values({ ...values })
     .returning()
     .then(findFirst);
+
+  // await db.insert(postsToCategories).values({
+  //   postId: post.id,
+  //   categoryId: 1,
+  // });
+
+  return post;
 }
 
-export async function getPost(id: any) {
+export async function getPost(id: any, params?: Record<string, any>) {
+  const { slug, accountId } = params || {};
+
   return await db
-    .select()
+    .select({
+      ...getTableColumns(posts),
+      ...getTableColumns(categories),
+    })
     .from(posts)
-    .innerJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
+    .leftJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
     .leftJoin(categories, eq(categories.id, postsToCategories.categoryId))
-    .where(eq(posts.id, id))
-    .then(findFirst);
-}
-export async function getPostBySlug(slug: string) {
-  return await db
-    .select()
-    .from(posts)
-    .innerJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
-    .leftJoin(categories, eq(categories.id, postsToCategories.categoryId))
-    .where(eq(posts.slug, slug))
+    .where(
+      and(
+        accountId ? eq(posts.accountId, accountId) : undefined,
+        or(
+          id ? eq(posts.id, id) : undefined,
+          slug ? eq(posts.slug, slug) : undefined
+        )
+      )
+    )
     .then(findFirst);
 }
 
-export async function getPosts(params: Record<string, string>) {
+export async function getPosts(params: Record<string, any>) {
+  const {
+    title,
+    slug,
+    category,
+    categorySlug,
+    accountId,
+    page,
+    limit,
+    order,
+    sort,
+  } = params;
+
   return await db
-    .select()
+    .select({
+      ...getTableColumns(posts),
+      ...getTableColumns(categories),
+    })
     .from(posts)
-    .innerJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
+    .leftJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
     .leftJoin(categories, eq(categories.id, postsToCategories.categoryId))
-    .then(findFirst);
+    .where(
+      and(
+        accountId ? eq(posts.accountId, accountId) : undefined,
+        or(
+          title ? eq(posts.title, title) : undefined,
+          slug ? eq(posts.slug, slug) : undefined,
+          category ? eq(categories.title, category) : undefined,
+          categorySlug ? eq(categories.slug, categorySlug) : undefined
+        )
+      )
+    )
+    .limit(limit)
+    .offset(0)
+    .orderBy(desc(posts.id));
 }
 
 export const updatePost = async (id: any, params: Record<string, string>) => {

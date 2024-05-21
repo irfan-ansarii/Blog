@@ -1,4 +1,5 @@
-import { relations } from "drizzle-orm";
+import { z } from "zod";
+import { relations, sql } from "drizzle-orm";
 import {
   serial,
   text,
@@ -20,12 +21,16 @@ export const posts = pgTable("posts", {
     .notNull()
     .references(() => accounts.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
-  slug: text("slug").unique(),
+  slug: text("slug").unique().notNull(),
   thumbnail: text("thumbnail"),
   content: text("content"),
   contentJson: json("content_json"),
   isProtected: boolean("is_protected").default(false),
-  password: text("password"),
+  password: text("password").default(""),
+  viewCount: integer("view_count").default(0),
+  tags: text("tags")
+    .array()
+    .default(sql`ARRAY[]::text[]`),
   createdBy: integer("created_by").references(() => users.id, {
     onDelete: "set null",
   }),
@@ -69,4 +74,6 @@ export const postsToCategories = pgTable(
   })
 );
 
-export const postCreateSchema = createInsertSchema(posts);
+export const postCreateSchema = createInsertSchema(posts).extend({
+  tags: z.array(z.string()),
+});

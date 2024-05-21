@@ -12,17 +12,27 @@ import {
 import { userCreateSchema } from "@/drizzle/schemas";
 import { DELETE_ROLES, sanitizeOutput } from "./utils";
 
-const userSchema = userCreateSchema.pick({
-  firstName: true,
-  lastName: true,
-  phone: true,
-  email: true,
-});
+const role = z.enum(["author", "editor"]);
 
-const inviteUserSchema = userCreateSchema.pick({
-  phone: true,
-  email: true,
-});
+const userSchema = userCreateSchema
+  .pick({
+    firstName: true,
+    lastName: true,
+    phone: true,
+    email: true,
+  })
+  .required();
+
+const inviteUserSchema = userCreateSchema
+  .pick({
+    phone: true,
+    email: true,
+    role: true,
+  })
+  .required()
+  .extend({
+    role: role,
+  });
 
 const app = new Hono()
   /******************************************************************* */
@@ -32,15 +42,20 @@ const app = new Hono()
     const { accountId } = c.get("jwtPayload");
     const values = c.req.valid("json");
 
+    const { phone, email } = values;
+
     const user = await getUser(undefined, {
-      phone: values.phone!,
-      email: values.email!,
+      phone: phone!,
+      email: email!,
     });
-    console.log(user, values);
-    if (user)
+
+    if (user) {
+      let message = "Email already registered";
+      if (user.phone === phone) message = "Phone already registered";
       throw new HTTPException(400, {
-        message: "Phone or email is already registed",
+        message,
       });
+    }
 
     const result = await createUser({
       ...values,
@@ -63,7 +78,7 @@ const app = new Hono()
 
     const query = c.req.query();
 
-    const users = await getUsers({ accountId: accountId, ...query });
+    const users = await getUsers({ accountId, ...query });
 
     const sanitized = sanitizeOutput(users, { password: true, otp: true });
 

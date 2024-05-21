@@ -36,14 +36,8 @@ export async function getUser(id: any, params?: Record<string, string>) {
 }
 
 export async function getUsers(params: Record<string, any>) {
-  const {
-    accountId = undefined,
-    firstName,
-    lastName,
-    phone,
-    email,
-    accountName,
-  } = params;
+  const { accountId, firstName, lastName, phone, email, accountName } = params;
+
   return await db
     .select({
       ...getTableColumns(users),
@@ -53,7 +47,7 @@ export async function getUsers(params: Record<string, any>) {
       planExpiresAt: accounts.planExpiresAt,
     })
     .from(users)
-    .leftJoin(accounts, eq(users.accountId, accounts.id))
+    .leftJoin(accounts, eq(accounts.id, users.accountId))
     .where(
       and(
         accountId ? eq(users.accountId, accountId) : undefined,
@@ -65,8 +59,7 @@ export async function getUsers(params: Record<string, any>) {
           accountName ? eq(accounts.name, accountName) : undefined
         )
       )
-    )
-    .then(findFirst);
+    );
 }
 
 export const updateUser = async (id: any, params: Record<string, any>) => {
