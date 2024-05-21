@@ -69,7 +69,7 @@ export async function getUsers(params: Record<string, any>) {
     .then(findFirst);
 }
 
-export const updateUser = async (id: any, params: Record<string, string>) => {
+export const updateUser = async (id: any, params: Record<string, any>) => {
   return await db
     .update(users)
     .set(params)

@@ -5,7 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
 
-import { sanitizeOutput } from "@/lib/utils";
+import { sanitizeOutput } from "./utils";
 
 const generateOTP = () => {
   const otp = Math.floor(100000 + Math.random() * 900000);

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import { jwt } from "hono/jwt";
+import { HTTPException } from "hono/http-exception";
 
 import liveblockHandler from "@/app/api/liveblocks";
 
@@ -19,7 +20,21 @@ const routes = app
   .all("/*", jwt({ secret: "secret" }))
   .route("/users", usersHandler)
   .route("/posts", postsHandler)
-  .route("/categories", categroiesHandler);
+  .route("/categories", categroiesHandler)
+
+  .onError((err: any, c) => {
+    let errorResponse = {
+      status: err.status || 500,
+      message: err.message || "Internal Server Error",
+      success: false,
+    };
+    if (err instanceof HTTPException) {
+      const res = err.getResponse();
+    }
+    return c.json({
+      ...errorResponse,
+    });
+  });
 
 export const GET = handle(app);
 export const PUT = handle(app);

@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
 import {
   createCategory,
   deleteCategory,
@@ -8,8 +10,8 @@ import {
 } from "@/drizzle/services/categories";
 import { zValidator } from "@hono/zod-validator";
 import { categoryCreateSchema } from "@/drizzle/schemas";
-import { isAuthorized } from "@/lib/utils";
 
+import { DELETE_ROLES } from "./utils";
 const categorySchema = categoryCreateSchema.pick({
   title: true,
   slug: true,
@@ -33,6 +35,7 @@ const app = new Hono()
     });
 
     return c.json({
+      success: true,
       data: result,
     });
   })
@@ -49,6 +52,7 @@ const app = new Hono()
     });
 
     return c.json({
+      success: true,
       data: results,
     });
   })
@@ -62,44 +66,35 @@ const app = new Hono()
     const result = await getCategory(id);
 
     if (accountId && result?.accountId !== accountId) {
-      return c.json(
-        {
-          message: "Not found",
-        },
-        404
-      );
+      throw new HTTPException(404, { message: "Not found" });
     }
 
     return c.json({
+      success: true,
       data: result,
     });
   })
   /********************************************************************* */
   /**                       UPDATE CATEGORY ROUTE                        */
   /********************************************************************* */
-  .put("/:id", zValidator("json", categorySchema), async (c, next) => {
+  .put("/:id", zValidator("json", categorySchema), async (c) => {
     const values = c.req.valid("json");
     const { id } = c.req.param();
 
-    const { id: userId, accountId, role } = c.get("jwtPayload");
+    const { id: userId, accountId } = c.get("jwtPayload");
 
     const result = await getCategory(id);
 
-    if (accountId && result?.accountId !== accountId) {
-      return c.json(
-        {
-          message: "Not found",
-        },
-        404
-      );
-    }
+    if (accountId && result?.accountId !== accountId)
+      throw new HTTPException(404, { message: "Not found" });
 
-    // create custom middleware fundtion
-    await isAuthorized(c, next);
-
-    const updated = await updateCategory(id, { ...values, updatedBy: userId });
+    const updated = await updateCategory(id, {
+      ...values,
+      updatedBy: userId,
+    });
 
     return c.json({
+      success: true,
       data: updated,
     });
   })
@@ -108,32 +103,23 @@ const app = new Hono()
   /********************************************************************* */
   .delete("/:id", async (c) => {
     const { id } = c.req.param();
-    const { accountId, role } = c.get("jwtPayload");
+    const { id: userId, accountId, role } = c.get("jwtPayload");
 
     const result = await getCategory(id);
 
-    if (accountId && result.accountId !== accountId) {
-      return c.json(
-        {
-          message: "Not found",
-        },
-        404
-      );
-    }
+    if (accountId && result?.accountId !== accountId)
+      throw new HTTPException(404, { message: "Not found" });
 
-    if (role !== "admin" && role !== "super") {
-      return c.json(
-        {
-          message: "you nedd higher level permission",
-        },
-        400
-      );
-    }
+    if (result.createdBy !== userId && !DELETE_ROLES.includes(role))
+      throw new HTTPException(403, {
+        message: "Access denied",
+      });
 
-    const updated = await deleteCategory(id);
+    const deleted = await deleteCategory(id);
 
     return c.json({
-      data: updated,
+      success: true,
+      data: deleted,
     });
   });
 
