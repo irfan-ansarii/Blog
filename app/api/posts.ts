@@ -20,6 +20,7 @@ const postSchema = postCreateSchema.omit({ accountId: true }).extend({
 const app = new Hono()
   .post("/", zValidator("json", postSchema), async (c) => {
     const { id, accountId } = c.get("jwtPayload");
+
     const values = c.req.valid("json");
 
     const post = await getPost(undefined, {
