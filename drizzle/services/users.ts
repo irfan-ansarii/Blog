@@ -13,7 +13,7 @@ export async function createUser(values: z.infer<typeof userCreateSchema>) {
 }
 
 export async function getUser(id: any, params?: Record<string, string>) {
-  const { phone, email } = params || {};
+  const { email } = params || {};
 
   return await db
     .select({
@@ -28,7 +28,7 @@ export async function getUser(id: any, params?: Record<string, string>) {
     .where(
       or(
         id ? eq(users.id, id) : undefined,
-        phone ? eq(users.phone, phone) : undefined,
+
         email ? eq(users.email, email) : undefined
       )
     )
@@ -36,7 +36,7 @@ export async function getUser(id: any, params?: Record<string, string>) {
 }
 
 export async function getUsers(params: Record<string, any>) {
-  const { accountId, firstName, lastName, phone, email, accountName } = params;
+  const { accountId, firstName, lastName, email, accountName } = params;
 
   return await db
     .select({
@@ -54,7 +54,6 @@ export async function getUsers(params: Record<string, any>) {
         or(
           firstName ? eq(users.firstName, firstName) : undefined,
           lastName ? eq(users.lastName, lastName) : undefined,
-          phone ? eq(users.phone, phone) : undefined,
           email ? eq(users.email, email) : undefined,
           accountName ? eq(accounts.name, accountName) : undefined
         )

@@ -6,12 +6,14 @@ import {
   deletePost,
   getPost,
   getPosts,
+  linkCategoryToPost,
   updatePost,
 } from "@/drizzle/services/posts";
 
 import { DELETE_ROLES } from "./utils";
 import { postCreateSchema } from "@/drizzle/schemas";
 import { zValidator } from "@hono/zod-validator";
+import { getCategories } from "@/drizzle/services/categories";
 
 const postSchema = postCreateSchema.omit({ accountId: true }).extend({
   categories: z.array(z.string().or(z.number())),
@@ -31,6 +33,7 @@ const app = new Hono()
       throw new HTTPException(400, { message: "Slug already in use" });
     }
 
+    // create post
     const result = await createPost({
       ...values,
       accountId,
@@ -38,9 +41,24 @@ const app = new Hono()
       updatedBy: id,
     });
 
+    // get valid category ids
+    const categories = await getCategories({
+      accountId,
+      ids: values.categories,
+    });
+
+    // oraginize category ids and post id to link
+    const categoriesToCreate = categories.map((value) => ({
+      postId: result.id,
+      categoryId: value.id,
+    }));
+
+    // link category to post
+    await linkCategoryToPost(categoriesToCreate);
+
     return c.json({
       success: true,
-      data: result,
+      data: { ...result, categories },
     });
   })
   .get("/", async (c) => {

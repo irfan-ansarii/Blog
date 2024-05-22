@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, getTableColumns, or, count, sql } from "drizzle-orm";
+import { eq, and, getTableColumns, or, count, sql, inArray } from "drizzle-orm";
 import { db, findFirst } from "../db";
 import {
   categories,
@@ -43,7 +43,7 @@ export async function getCategory(id: any, params?: Record<string, any>) {
 }
 
 export async function getCategories(params: Record<string, any>) {
-  const { accountId, title, slug } = params;
+  const { ids, accountId, title, slug } = params;
 
   return await db
     .select({
@@ -61,7 +61,8 @@ export async function getCategories(params: Record<string, any>) {
         accountId ? eq(categories.accountId, accountId) : undefined,
         or(
           title ? eq(categories.title, title) : undefined,
-          slug ? eq(categories.slug, slug) : undefined
+          slug ? eq(categories.slug, slug) : undefined,
+          ids ? inArray(categories.id, ids) : undefined
         )
       )
     )

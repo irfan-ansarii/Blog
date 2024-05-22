@@ -6,6 +6,7 @@ import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
 
 import { sanitizeOutput } from "./utils";
+import { HTTPException } from "hono/http-exception";
 
 const generateOTP = () => {
   const otp = Math.floor(100000 + Math.random() * 900000);
@@ -60,27 +61,25 @@ const app = new Hono()
   /********************************************************************* */
   .post("/signup", zValidator("json", signupSchema), async (c, next) => {
     const values = c.req.valid("json");
-    const { phone, email, password } = values;
+    const { email } = values;
 
-    const userExist = await getUser(undefined, { email, phone });
+    const userExist = await getUser(undefined, { email });
 
     if (userExist) {
-      let message = "Email already registered";
-      if (userExist.phone === phone) message = "Phone already registered";
-      return c.json({ name: "Bad request", message }, 400);
+      throw new HTTPException(400, { message: "User already registered" });
     }
 
     const userAccount = await createAccount({
       ...values,
     });
 
-    // sanitize the output
     const sanitized = sanitizeOutput(userAccount, {
       password: true,
       otp: true,
     });
 
     return c.json({
+      success: true,
       data: sanitized,
     });
   })
@@ -95,19 +94,10 @@ const app = new Hono()
 
     const userData = await getUser(undefined, { phone: phone!, email: email! });
 
-    if (!userData) {
-      return c.json(
-        { name: "Bad request", message: "Invalid email or password" },
-        400
-      );
+    if (!userData || userData.password !== password) {
+      throw new HTTPException(400, { message: "Invalid email or password" });
     }
 
-    if (userData.password !== password) {
-      return c.json(
-        { name: "Bad request", message: "Incorrect password" },
-        400
-      );
-    }
     const payload = {
       id: userData.id,
       accountId: userData.accountId,
@@ -121,6 +111,7 @@ const app = new Hono()
     const token = await sign(payload, "secret");
 
     return c.json({
+      success: true,
       data: {
         token,
         ...sanitized,
@@ -133,24 +124,20 @@ const app = new Hono()
   /********************************************************************* */
   .post("/signin/otp", zValidator("json", otpLoginSchema), async (c) => {
     const data = c.req.valid("json");
-    const { email, phone } = data;
+    const { email } = data;
 
-    const userData = await getUser(undefined, { phone: phone!, email: email! });
+    const userData = await getUser(undefined, { email: email! });
 
     if (!userData) {
-      return c.json(
-        { name: "Bad request", message: "User is not registered" },
-        400
-      );
+      throw new HTTPException(400, { message: "Invalid email" });
     }
     const otp = generateOTP();
 
-    const r = await updateUser(userData.id, { otp });
+    await updateUser(userData.id, { otp });
 
     return c.json({
+      success: true,
       data: {
-        ...r,
-        phone,
         email,
       },
     });
@@ -166,23 +153,15 @@ const app = new Hono()
     const userData = await getUser(undefined, { phone: phone!, email: email! });
 
     if (!userData) {
-      return c.json(
-        { name: "Bad request", message: "User is not registered" },
-        400
-      );
+      throw new HTTPException(400, { message: "Invalid email" });
     }
 
-    if (!userData.otp) {
-      return c.json({ name: "Bad request", message: "invalid request" }, 400);
-    }
-
-    if (userData.otp !== otp) {
-      return c.json({ name: "Bad request", message: "invalid otp" }, 400);
+    if (!userData.otp || userData.otp !== otp) {
+      throw new HTTPException(400, { message: "Invalid otp" });
     }
 
     await updateUser(userData.id, { otp: "" });
 
-    // sign jwt and return
     const payload = {
       id: userData.id,
       accountId: userData.accountId,

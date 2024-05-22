@@ -17,7 +17,6 @@ export const users = pgTable("users", {
     .references(() => accounts.id, { onDelete: "cascade" }),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  phone: text("phone").unique(),
   email: text("email").unique(),
   role: text("role", { enum: roles }).default("guest").notNull(),
   status: text("status", { enum: status }).default("active").notNull(),
@@ -38,7 +37,4 @@ export const usersRelations = relations(users, ({ one }) => ({
 
 export const userCreateSchema = createInsertSchema(users, {
   email: z.string().email({ message: "Invalid email" }),
-  phone: z.string().regex(/^\d{6,14}$/, {
-    message: "Invalid phone number",
-  }),
 });

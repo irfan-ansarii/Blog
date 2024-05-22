@@ -1,28 +1,28 @@
 import { z } from "zod";
-import { eq, or, and, getTableColumns, asc, desc } from "drizzle-orm";
+import { eq, or, and, getTableColumns, asc, desc, sql } from "drizzle-orm";
 
 import { db, findFirst } from "../db";
 import {
   categories,
+  createPostToCategorySchema,
   postCreateSchema,
   posts,
   postsToCategories,
 } from "../schemas";
 
 export async function createPost(values: z.infer<typeof postCreateSchema>) {
-  const post = await db
+  return await db
     .insert(posts)
     .values({ ...values })
     .returning()
     .then(findFirst);
-
-  // await db.insert(postsToCategories).values({
-  //   postId: post.id,
-  //   categoryId: 1,
-  // });
-
-  return post;
 }
+
+export const linkCategoryToPost = async (
+  values: z.infer<typeof createPostToCategorySchema>[]
+) => {
+  return await db.insert(postsToCategories).values(values).returning();
+};
 
 export async function getPost(id: any, params?: Record<string, any>) {
   const { slug, accountId } = params || {};
@@ -60,28 +60,13 @@ export async function getPosts(params: Record<string, any>) {
     sort,
   } = params;
 
-  return await db
-    .select({
-      ...getTableColumns(posts),
-      ...getTableColumns(categories),
-    })
-    .from(posts)
-    .leftJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
-    .leftJoin(categories, eq(categories.id, postsToCategories.categoryId))
-    .where(
-      and(
-        accountId ? eq(posts.accountId, accountId) : undefined,
-        or(
-          title ? eq(posts.title, title) : undefined,
-          slug ? eq(posts.slug, slug) : undefined,
-          category ? eq(categories.title, category) : undefined,
-          categorySlug ? eq(categories.slug, categorySlug) : undefined
-        )
-      )
-    )
-    .limit(limit)
-    .offset(0)
-    .orderBy(desc(posts.id));
+  const sq = db.select().from(posts).as("sq");
+
+  const result = await db
+    .select()
+    .from(postsToCategories)
+    .leftJoin(sq, eq(postsToCategories.postId, sq.id));
+  return result;
 }
 
 export const updatePost = async (id: any, params: Record<string, string>) => {
