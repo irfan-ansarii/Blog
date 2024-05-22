@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { serial, text, timestamp, pgTable, integer } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { accounts } from "./accounts";
-import { posts } from "./posts";
+import { posts, postsCategories } from "./posts";
 import { createInsertSchema } from "drizzle-zod";
 
 export const categories = pgTable("categories", {
@@ -29,7 +29,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
     fields: [categories.accountId],
     references: [accounts.id],
   }),
-  posts: many(posts),
+  posts: many(postsCategories),
   createdBy: one(users, {
     fields: [categories.createdBy],
     references: [users.id],

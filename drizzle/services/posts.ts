@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { eq, or, and, getTableColumns, asc, desc, sql } from "drizzle-orm";
+import {
+  eq,
+  or,
+  and,
+  getTableColumns,
+  asc,
+  desc,
+  sql,
+  inArray,
+} from "drizzle-orm";
 
 import { db, findFirst } from "../db";
 import {
@@ -7,7 +16,7 @@ import {
   createPostToCategorySchema,
   postCreateSchema,
   posts,
-  postsToCategories,
+  postsCategories,
 } from "../schemas";
 
 export async function createPost(values: z.infer<typeof postCreateSchema>) {
@@ -21,7 +30,7 @@ export async function createPost(values: z.infer<typeof postCreateSchema>) {
 export const linkCategoryToPost = async (
   values: z.infer<typeof createPostToCategorySchema>[]
 ) => {
-  return await db.insert(postsToCategories).values(values).returning();
+  return await db.insert(postsCategories).values(values).returning();
 };
 
 export async function getPost(id: any, params?: Record<string, any>) {
@@ -33,8 +42,8 @@ export async function getPost(id: any, params?: Record<string, any>) {
       ...getTableColumns(categories),
     })
     .from(posts)
-    .leftJoin(postsToCategories, eq(postsToCategories.postId, posts.id))
-    .leftJoin(categories, eq(categories.id, postsToCategories.categoryId))
+    .leftJoin(postsCategories, eq(postsCategories.postId, posts.id))
+    .leftJoin(categories, eq(categories.id, postsCategories.categoryId))
     .where(
       and(
         accountId ? eq(posts.accountId, accountId) : undefined,
@@ -60,13 +69,31 @@ export async function getPosts(params: Record<string, any>) {
     sort,
   } = params;
 
-  const sq = db.select().from(posts).as("sq");
-
   const result = await db
-    .select()
-    .from(postsToCategories)
-    .leftJoin(sq, eq(postsToCategories.postId, sq.id));
-  return result;
+    .select({
+      ...getTableColumns(posts),
+      categories: getTableColumns(categories),
+    })
+    .from(posts)
+    .leftJoin(postsCategories, eq(postsCategories.postId, posts.id))
+    .leftJoin(categories, eq(categories.id, postsCategories.categoryId));
+
+  const modified = result.reduce<{ [postId: number]: any }>((acc, curr) => {
+    const postId = curr.id;
+
+    if (!acc[postId]) {
+      acc[postId] = {
+        ...curr,
+        categories: [curr.categories] || [],
+      };
+    } else {
+      acc[postId].categories.push(curr.categories);
+    }
+
+    return acc;
+  }, {});
+
+  return Object.values(modified);
 }
 
 export const updatePost = async (id: any, params: Record<string, string>) => {

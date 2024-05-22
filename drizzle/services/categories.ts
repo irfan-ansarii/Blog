@@ -5,7 +5,7 @@ import {
   categories,
   categoryCreateSchema,
   posts,
-  postsToCategories,
+  postsCategories,
 } from "../schemas";
 
 export async function createCategory(
@@ -27,11 +27,8 @@ export async function getCategory(id: any, params?: Record<string, any>) {
       postCount: count(posts),
     })
     .from(categories)
-    .leftJoin(
-      postsToCategories,
-      eq(postsToCategories.categoryId, categories.id)
-    )
-    .leftJoin(posts, eq(posts.id, postsToCategories.postId))
+    .leftJoin(postsCategories, eq(postsCategories.categoryId, categories.id))
+    .leftJoin(posts, eq(posts.id, postsCategories.postId))
     .where(
       or(
         id ? eq(categories.id, id) : undefined,
@@ -51,11 +48,8 @@ export async function getCategories(params: Record<string, any>) {
       postCount: count(posts),
     })
     .from(categories)
-    .leftJoin(
-      postsToCategories,
-      eq(postsToCategories.categoryId, categories.id)
-    )
-    .leftJoin(posts, eq(posts.id, postsToCategories.postId))
+    .leftJoin(postsCategories, eq(postsCategories.categoryId, categories.id))
+    .leftJoin(posts, eq(posts.id, postsCategories.postId))
     .where(
       and(
         accountId ? eq(categories.accountId, accountId) : undefined,

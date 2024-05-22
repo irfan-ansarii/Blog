@@ -46,15 +46,15 @@ const app = new Hono()
       accountId,
       ids: values.categories,
     });
-
+    console.log(categories);
     // oraginize category ids and post id to link
-    const categoriesToCreate = categories.map((value) => ({
+    const categoriesCreate = categories.map((value) => ({
       postId: result.id,
-      categoryId: value.id,
+      categoryId: value.id!,
     }));
 
     // link category to post
-    await linkCategoryToPost(categoriesToCreate);
+    await linkCategoryToPost(categoriesCreate);
 
     return c.json({
       success: true,

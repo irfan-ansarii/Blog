@@ -43,16 +43,6 @@ export const posts = pgTable("posts", {
     .$onUpdate(() => new Date()),
 });
 
-export const postsToCategories = pgTable("posts_to_categories", {
-  id: serial("id").primaryKey(),
-  postId: integer("post_id")
-    .references(() => posts.id, { onDelete: "cascade" })
-    .notNull(),
-  categoryId: integer("category_id")
-    .references(() => categories.id, { onDelete: "cascade" })
-    .notNull(),
-});
-
 export const postsRelations = relations(posts, ({ one, many }) => ({
   account: one(accounts, {
     fields: [posts.accountId],
@@ -66,10 +56,38 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
     fields: [posts.createdBy],
     references: [users.id],
   }),
-  categories: many(categories),
+  postCategories: many(postsCategories),
 }));
 
-export const createPostToCategorySchema = createInsertSchema(postsToCategories);
+export const postsCategories = pgTable(
+  "posts_categories",
+  {
+    postId: integer("post_id")
+      .references(() => posts.id, { onDelete: "cascade" })
+      .notNull(),
+    categoryId: integer("category_id")
+      .references(() => categories.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.postId, t.categoryId] }),
+  })
+);
+
+export const postsCategoriesRelation = relations(
+  postsCategories,
+  ({ one }) => ({
+    posts: one(posts, {
+      fields: [postsCategories.postId],
+      references: [posts.id],
+    }),
+    categories: one(categories, {
+      fields: [postsCategories.categoryId],
+      references: [categories.id],
+    }),
+  })
+);
+export const createPostToCategorySchema = createInsertSchema(postsCategories);
 
 export const postCreateSchema = createInsertSchema(posts).extend({
   tags: z.array(z.string()),

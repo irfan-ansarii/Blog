@@ -15,6 +15,13 @@
       "when": 1716384312987,
       "tag": "0001_elite_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1716397417855,
+      "tag": "0002_crazy_glorian",
+      "breakpoints": true
     }
   ]
 }
