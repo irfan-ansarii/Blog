@@ -9,7 +9,7 @@ import authHandler from "@/app/api/auth";
 import usersHandler from "@/app/api/users";
 import postsHandler from "@/app/api/posts";
 import categroiesHandler from "@/app/api/categories";
-
+import commentsHandler from "@/app/api/comments";
 export const runtime = "edge";
 
 const app = new Hono().basePath("/api");
@@ -21,6 +21,7 @@ const routes = app
   .route("/users", usersHandler)
   .route("/posts", postsHandler)
   .route("/categories", categroiesHandler)
+  .route("/comments", commentsHandler)
 
   .onError((err: any, c) => {
     let errorResponse = {

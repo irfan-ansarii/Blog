@@ -22,6 +22,13 @@
       "when": 1716397417855,
       "tag": "0002_crazy_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1716494147058,
+      "tag": "0003_mysterious_proudstar",
+      "breakpoints": true
     }
   ]
 }

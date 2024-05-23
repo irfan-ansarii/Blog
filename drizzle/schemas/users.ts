@@ -12,9 +12,9 @@ const status = ["invited", "active", "blocked"] as const;
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  accountId: integer("accountId")
-    .notNull()
-    .references(() => accounts.id, { onDelete: "cascade" }),
+  accountId: integer("accountId").references(() => accounts.id, {
+    onDelete: "cascade",
+  }),
   firstName: text("first_name"),
   lastName: text("last_name"),
   email: text("email").unique(),

@@ -18,6 +18,8 @@ import {
 } from "@/drizzle/services/posts";
 
 import { DELETE_ROLES } from "./utils";
+import { createCommentSchema } from "@/drizzle/schemas/comments";
+import { createComment, getComments } from "@/drizzle/services/comments";
 
 const postSchema = postCreateSchema.omit({ accountId: true }).extend({
   categories: z.array(z.string().or(z.number())),
@@ -27,7 +29,16 @@ const createCategoriesSchema = z.object({
   categories: z.array(z.string().or(z.number())),
 });
 
+const commentSchema = createCommentSchema.omit({
+  accountId: true,
+  postId: true,
+});
+
 const app = new Hono()
+
+  /******************************************************************* */
+  /*                           CREATE POSTS                            */
+  /******************************************************************* */
   .post("/", zValidator("json", postSchema), async (c) => {
     const { id, accountId } = c.get("jwtPayload");
 
@@ -69,6 +80,9 @@ const app = new Hono()
       data: { ...result, categories },
     });
   })
+  /******************************************************************* */
+  /*                             GET POSTS                             */
+  /******************************************************************* */
   .get("/", async (c) => {
     const { accountId } = c.get("jwtPayload");
     const query = c.req.query();
@@ -83,7 +97,9 @@ const app = new Hono()
       ...posts,
     });
   })
-
+  /******************************************************************* */
+  /*                             GET POST                             */
+  /******************************************************************* */
   .get("/:id", async (c) => {
     const { id } = c.req.param();
     const { accountId } = c.get("jwtPayload");
@@ -99,7 +115,9 @@ const app = new Hono()
       data: post,
     });
   })
-
+  /******************************************************************* */
+  /*                       CREATE POST CATEGORIES                      */
+  /******************************************************************* */
   .post(
     "/:id/categories",
     zValidator("json", createCategoriesSchema),
@@ -135,7 +153,9 @@ const app = new Hono()
       });
     }
   )
-
+  /******************************************************************* */
+  /*                         GET POST CATEGORIES                        */
+  /******************************************************************* */
   .get("/:id/categories", async (c) => {
     const { id } = c.req.param();
     const { accountId } = c.get("jwtPayload");
@@ -155,6 +175,50 @@ const app = new Hono()
     });
   })
 
+  /******************************************************************* */
+  /*                          CREATE COMMENT                           */
+  /******************************************************************* */
+  .post("/:id/comments", zValidator("json", commentSchema), async (c) => {
+    const values = c.req.valid("json");
+    const { id: postId } = c.req.param();
+    const { id: userId, accountId } = c.get("jwtPayload");
+
+    const result = await createComment({
+      ...values,
+      postId: Number(postId),
+      accountId,
+      createdBy: userId,
+    });
+
+    return c.json({
+      success: true,
+      data: result,
+    });
+  })
+  /******************************************************************* */
+  /*                          GET COMMENTS                              */
+  /******************************************************************* */
+  .get("/:id/comments", async (c) => {
+    const { accountId } = c.get("jwtPayload");
+    const { id: postId } = c.req.param();
+
+    const post = await getPost(postId, { accountId });
+
+    if (!post) throw new HTTPException(404, { message: "Not Found" });
+
+    const results = await getComments({
+      accountId,
+      postId,
+    });
+
+    return c.json({
+      success: true,
+      data: results,
+    });
+  })
+  /******************************************************************* */
+  /*                           UPDATE POSTS                            */
+  /******************************************************************* */
   .put("/:id", zValidator("json", postSchema), async (c) => {
     const { id } = c.req.param();
     const { id: userId, accountId } = c.get("jwtPayload");
@@ -184,7 +248,9 @@ const app = new Hono()
       data: result,
     });
   })
-
+  /******************************************************************* */
+  /*                           DELETE POSTS                            */
+  /******************************************************************* */
   .delete("/:id", async (c) => {
     const { id } = c.req.param();
     const { id: userId, role, accountId } = c.get("jwtPayload");
