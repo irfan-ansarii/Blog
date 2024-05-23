@@ -7,13 +7,12 @@ import { CardDescription, CardTitle } from "@/components/ui/card";
 import { ChevronDown, Filter, ListFilter, PlusCircle } from "lucide-react";
 
 import SearchBar from "@/components/admin/search-bar";
-import AddUser from "../_components/add-user";
+
 const PostsLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <div className="mb-6 flex">
         <div className="space-y-1">
-          <AddUser />
           <CardTitle>Posts</CardTitle>
           <CardDescription>
             Lorem ipsum dolor sit amet consectetur.

@@ -44,14 +44,8 @@ const items = [
   {
     title: "Categories",
     slug: "/categories",
-    icon: Package2,
-  },
-  {
-    title: "Tags",
-    slug: "/tags",
     icon: Tags,
   },
-
   {
     title: "Audience",
     slug: "/audience",

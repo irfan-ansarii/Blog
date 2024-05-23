@@ -87,7 +87,7 @@ export const postsCategoriesRelation = relations(
     }),
   })
 );
-export const createPostToCategorySchema = createInsertSchema(postsCategories);
+export const createPostCategorySchema = createInsertSchema(postsCategories);
 
 export const postCreateSchema = createInsertSchema(posts).extend({
   tags: z.array(z.string()),

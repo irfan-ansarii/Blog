@@ -6,18 +6,12 @@ import {
   getTableColumns,
   asc,
   desc,
-  sql,
-  inArray,
+  ilike,
+  count,
 } from "drizzle-orm";
 
 import { db, findFirst } from "../db";
-import {
-  categories,
-  createPostToCategorySchema,
-  postCreateSchema,
-  posts,
-  postsCategories,
-} from "../schemas";
+import { postCreateSchema, posts, postsCategories } from "../schemas";
 
 export async function createPost(values: z.infer<typeof postCreateSchema>) {
   return await db
@@ -27,23 +21,16 @@ export async function createPost(values: z.infer<typeof postCreateSchema>) {
     .then(findFirst);
 }
 
-export const linkCategoryToPost = async (
-  values: z.infer<typeof createPostToCategorySchema>[]
-) => {
-  return await db.insert(postsCategories).values(values).returning();
-};
-
 export async function getPost(id: any, params?: Record<string, any>) {
   const { slug, accountId } = params || {};
 
   return await db
     .select({
       ...getTableColumns(posts),
-      ...getTableColumns(categories),
+      categoriesCount: count(postsCategories),
     })
     .from(posts)
     .leftJoin(postsCategories, eq(postsCategories.postId, posts.id))
-    .leftJoin(categories, eq(categories.id, postsCategories.categoryId))
     .where(
       and(
         accountId ? eq(posts.accountId, accountId) : undefined,
@@ -53,50 +40,64 @@ export async function getPost(id: any, params?: Record<string, any>) {
         )
       )
     )
+    .groupBy(posts.id)
     .then(findFirst);
 }
 
 export async function getPosts(params: Record<string, any>) {
   const {
-    title,
-    slug,
-    category,
-    categorySlug,
+    q,
     accountId,
-    page,
-    limit,
-    order,
-    sort,
+    page = 1,
+    limit = 10,
+    order = "id",
+    direction,
   } = params;
 
-  const result = await db
+  // filters
+  const filters = and(
+    accountId ? eq(posts.accountId, accountId) : undefined,
+    q
+      ? or(ilike(posts.title, `%${q}%`), ilike(posts.content, `%${q}%`))
+      : undefined
+  );
+
+  // get posts
+  const results = await db
     .select({
       ...getTableColumns(posts),
-      categories: getTableColumns(categories),
+      categoriesCount: count(postsCategories),
     })
     .from(posts)
     .leftJoin(postsCategories, eq(postsCategories.postId, posts.id))
-    .leftJoin(categories, eq(categories.id, postsCategories.categoryId));
+    .where(filters)
+    .limit(limit)
+    .orderBy(direction === "asc" ? asc(order) : desc(order))
+    .offset((page - 1) * limit)
+    .groupBy(posts.id);
 
-  const modified = result.reduce<{ [postId: number]: any }>((acc, curr) => {
-    const postId = curr.id;
+  // get total record count
+  const recordCount = await db
+    .select({ total: count() })
+    .from(posts)
+    .where(filters)
+    .then(findFirst);
 
-    if (!acc[postId]) {
-      acc[postId] = {
-        ...curr,
-        categories: [curr.categories] || [],
-      };
-    } else {
-      acc[postId].categories.push(curr.categories);
-    }
-
-    return acc;
-  }, {});
-
-  return Object.values(modified);
+  return {
+    data: results,
+    meta: {
+      page: parseInt(page),
+      size: limit,
+      pages: Math.ceil(recordCount.total / limit),
+      ...recordCount,
+    },
+  };
 }
 
-export const updatePost = async (id: any, params: Record<string, string>) => {
+export const updatePost = async (
+  id: any,
+  params: z.infer<typeof postCreateSchema>
+) => {
   return await db
     .update(posts)
     .set(params)

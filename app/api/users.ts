@@ -18,14 +18,13 @@ const userSchema = userCreateSchema
   .pick({
     firstName: true,
     lastName: true,
-    phone: true,
+
     email: true,
   })
   .required();
 
 const inviteUserSchema = userCreateSchema
   .pick({
-    phone: true,
     email: true,
     role: true,
   })
@@ -42,18 +41,15 @@ const app = new Hono()
     const { accountId } = c.get("jwtPayload");
     const values = c.req.valid("json");
 
-    const { phone, email } = values;
+    const { email } = values;
 
     const user = await getUser(undefined, {
-      phone: phone!,
       email: email!,
     });
 
     if (user) {
-      let message = "Email already registered";
-      if (user.phone === phone) message = "Phone already registered";
       throw new HTTPException(400, {
-        message,
+        message: "Email already registered",
       });
     }
 

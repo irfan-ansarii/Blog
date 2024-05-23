@@ -17,8 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import Tooltip from "@/components/custom-ui/tooltip";
+import { ClientResponse } from "hono/client";
+import { format } from "date-fns";
 
-const PostCard = () => {
+const PostCard = ({ post }) => {
   const isArchived = true;
   return (
     <Card
@@ -33,7 +35,7 @@ const PostCard = () => {
                 className="p-1 rounded-full"
               />
               <AvatarFallback className="font-medium text-xs uppercase">
-                A
+                {post.title.charAt(0)}
               </AvatarFallback>
             </Avatar>
 
@@ -44,10 +46,13 @@ const PostCard = () => {
                   !isArchived ? "line-through text-muted-foreground" : ""
                 }`}
               >
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                <span>
-                  <LockKeyhole className="w-4 h-4 ml-2 " />
-                </span>
+                {post.title}
+                {post.isProtected && (
+                  <span>
+                    <LockKeyhole className="w-4 h-4 ml-2 " />
+                  </span>
+                )}
+
                 <PenSquare className="w-4 h-4 ml-2 opacity-0" />
               </Link>
 
@@ -62,7 +67,7 @@ const PostCard = () => {
                     target="_blank"
                     className={`truncate flex-1 inline-flex items-center hover:underline`}
                   >
-                    Lorem ipsum dolor sit amet consectetur.
+                    {post.slug}
                     <ExternalLink className="w-4 h-4 ml-2 " />
                   </a>
                 )}
@@ -72,19 +77,20 @@ const PostCard = () => {
           <div className="flex items-center flex-none gap-1">
             <Tooltip
               content={
-                <>
+                <div>
                   <p className="text-center font-medium text-sm">
-                    10 total views
+                    {post.viewCount} total views
                   </p>
                   <p className="text-muted-foreground text-xs font-medium">
-                    Last clicked today
+                    Last view today
                   </p>
-                </>
+                </div>
               }
             >
               <Link href={`/analytics/`}>
                 <Badge className="py-1">
-                  <Eye className="w-4 h-4 mr-1 md:mr-2" />0
+                  <Eye className="w-4 h-4 mr-1 md:mr-2" />
+                  {post.viewCount}
                   <span className="hidden md:inline ml-1"> Views</span>
                 </Badge>
               </Link>
@@ -100,7 +106,7 @@ const PostCard = () => {
           <div className="flex  items-center gap-2 text-sm overflow-hidden flex-1">
             <span className="inline-flex items-center text-muted-foreground gap-2">
               <Calendar className="w-4 h-4" />
-              12 May
+              {format(post.createdAt, "dd, MMM")}
             </span>
 
             <p>•</p>
@@ -122,7 +128,7 @@ const PostCard = () => {
             >
               <span className="inline-flex items-center text-muted-foreground gap-2">
                 <Tags className="w-4 h-4" />
-                10 +
+                {post.categoriesCount}
               </span>
             </Tooltip>
           </div>

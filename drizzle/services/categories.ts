@@ -1,9 +1,20 @@
 import { z } from "zod";
-import { eq, and, getTableColumns, or, count, sql, inArray } from "drizzle-orm";
+import {
+  eq,
+  and,
+  getTableColumns,
+  or,
+  count,
+  inArray,
+  ilike,
+} from "drizzle-orm";
+
 import { db, findFirst } from "../db";
+
 import {
   categories,
   categoryCreateSchema,
+  createPostCategorySchema,
   posts,
   postsCategories,
 } from "../schemas";
@@ -40,7 +51,7 @@ export async function getCategory(id: any, params?: Record<string, any>) {
 }
 
 export async function getCategories(params: Record<string, any>) {
-  const { ids, accountId, title, slug } = params;
+  const { ids, accountId, q } = params;
 
   return await db
     .select({
@@ -49,15 +60,12 @@ export async function getCategories(params: Record<string, any>) {
     })
     .from(categories)
     .leftJoin(postsCategories, eq(postsCategories.categoryId, categories.id))
-    .leftJoin(posts, eq(posts.id, postsCategories.postId))
+    .leftJoin(posts, eq(postsCategories.postId, posts.id))
     .where(
       and(
         accountId ? eq(categories.accountId, accountId) : undefined,
-        or(
-          title ? eq(categories.title, title) : undefined,
-          slug ? eq(categories.slug, slug) : undefined,
-          ids ? inArray(categories.id, ids) : undefined
-        )
+        ids ? inArray(categories.id, ids) : undefined,
+        q ? or(ilike(categories.title, `%${q}%`)) : undefined
       )
     )
     .groupBy(categories.id);
@@ -81,4 +89,25 @@ export const deleteCategory = async (id: any) => {
     .where(eq(categories.id, id))
     .returning()
     .then(findFirst);
+};
+
+export const createPostCategories = async (
+  values: z.infer<typeof createPostCategorySchema>[]
+) => {
+  return await db
+    .insert(postsCategories)
+    .values(values)
+    .onConflictDoNothing()
+    .returning();
+};
+
+export const getPostCategories = async (postId: number) => {
+  return await db
+    .select({
+      ...getTableColumns(categories),
+    })
+    .from(postsCategories)
+    .leftJoin(categories, eq(postsCategories.categoryId, categories.id))
+    .where(postId ? eq(postsCategories.postId, postId) : undefined)
+    .groupBy(categories.id, postsCategories.postId);
 };
