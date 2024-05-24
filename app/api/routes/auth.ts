@@ -5,7 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
 
-import { sanitizeOutput } from "./utils";
+import { sanitizeOutput } from "../utils";
 import { HTTPException } from "hono/http-exception";
 
 const generateOTP = () => {
@@ -18,44 +18,46 @@ const signupSchema = z.object({
   accountName: z.string().min(5),
   firstName: z.string().min(2),
   lastName: z.string().min(1),
-  phone: z.string().regex(/^\d{6,14}$/, {
-    message: "Invalid phone number",
-  }),
   email: z.string().email({ message: "Invalid email" }),
   password: z.string().min(8),
 });
 
-// Base schema for email and phone validation
-const baseAuthSchema = z.object({
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
+// signin schema
+const signinSchema = z.object({
+  email: z.string().email({ message: "Invalid email" }),
+  password: z.string().min(1),
 });
 
-// Utility function to add refinement
-const withEmailOrPhone = <T extends ZodSchema>(schema: T) =>
-  schema.refine((data) => data.email || data.phone, {
-    message: "Email or phone is required",
-    path: ["email", "phone"],
+// login with otp
+const otpLoginSchema = z.object({
+  email: z.string().email({ message: "Invalid email" }),
+});
+
+// verify otp
+const otpVerifySchema = z.object({
+  email: z.string().email({ message: "Invalid email" }),
+  otp: z.string().length(6),
+});
+
+// reset password schema
+const resetSchema = z
+  .object({
+    email: z.string().email({ message: "Invalid email" }),
+    otp: z.string().length(6),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .superRefine(({ confirmPassword, password }, ctx) => {
+    if (confirmPassword !== password) {
+      ctx.addIssue({
+        code: "custom",
+        message: "The passwords did not match",
+        path: ["confirmPassword"],
+      });
+    }
   });
 
-// Signin schema with additional password field
-const signinSchema = withEmailOrPhone(
-  baseAuthSchema.extend({
-    password: z.string(),
-  })
-);
-// OTP login schema
-const otpLoginSchema = withEmailOrPhone(baseAuthSchema);
-
-// OTP verify schema with additional otp field
-const otpVerifySchema = withEmailOrPhone(
-  baseAuthSchema.extend({
-    otp: z.string(),
-  })
-);
-
 const app = new Hono()
-
   /********************************************************************* */
   /**                           SIGNUP ROUTE                             */
   /********************************************************************* */
@@ -90,9 +92,9 @@ const app = new Hono()
 
   .post("/signin", zValidator("json", signinSchema), async (c) => {
     const data = c.req.valid("json");
-    const { phone, email, password } = data;
+    const { email, password } = data;
 
-    const userData = await getUser(undefined, { phone: phone!, email: email! });
+    const userData = await getUser(undefined, { email: email! });
 
     if (!userData || userData.password !== password) {
       throw new HTTPException(400, { message: "Invalid email or password" });
@@ -148,9 +150,9 @@ const app = new Hono()
   /********************************************************************* */
   .post("/signin/verify", zValidator("json", otpVerifySchema), async (c) => {
     const data = c.req.valid("json");
-    const { email, phone, otp } = data;
+    const { email, otp } = data;
 
-    const userData = await getUser(undefined, { phone: phone!, email: email! });
+    const userData = await getUser(undefined, { email: email! });
 
     if (!userData) {
       throw new HTTPException(400, { message: "Invalid email" });
@@ -179,6 +181,54 @@ const app = new Hono()
         token,
         ...sanitized,
       },
+    });
+  })
+  /********************************************************************* */
+  /**                            RECOVER ROUTE                           */
+  /********************************************************************* */
+  .post("/recover", zValidator("json", otpLoginSchema), async (c) => {
+    const data = c.req.valid("json");
+    const { email } = data;
+
+    const userData = await getUser(undefined, { email: email! });
+
+    if (!userData) {
+      throw new HTTPException(400, { message: "Invalid email" });
+    }
+    const otp = generateOTP();
+
+    await updateUser(userData.id, { otp });
+
+    return c.json({
+      success: true,
+      data: {
+        email,
+      },
+    });
+  })
+  /********************************************************************* */
+  /**                              RESET ROUTE                           */
+  /********************************************************************* */
+  .post("/reset", zValidator("json", resetSchema), async (c) => {
+    const data = c.req.valid("json");
+    const { email, otp, password, confirmPassword } = data;
+
+    const userData = await getUser(undefined, { email: email! });
+
+    if (!userData) {
+      throw new HTTPException(400, { message: "Invalid email" });
+    }
+
+    if (!userData.otp || userData.otp !== otp) {
+      throw new HTTPException(400, { message: "Invalid otp" });
+    }
+
+    await updateUser(userData.id, { otp: "", password: confirmPassword });
+
+    const sanitized = sanitizeOutput(userData, { otp: true, password: true });
+
+    return c.json({
+      data: sanitized,
     });
   });
 

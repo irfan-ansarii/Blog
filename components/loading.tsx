@@ -10,8 +10,9 @@ const Loading = ({ className }: { className?: string }) => {
         className
       )}
     >
-      <div className="inline-flex gap-2 items-center">
-        <Loader className="w-5 h-5 animate-spin" /> Please wait...
+      <div className="flex gap-2 items-center flex-col">
+        <Loader className="w-6 h-6 animate-spin text-lime-500" />
+        <p>Please wait while we fetch the content.</p>
       </div>
     </div>
   );

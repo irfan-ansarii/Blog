@@ -10,7 +10,7 @@ import {
   updateUser,
 } from "@/drizzle/services/users";
 import { userCreateSchema } from "@/drizzle/schemas";
-import { DELETE_ROLES, sanitizeOutput } from "./utils";
+import { DELETE_ROLES, sanitizeOutput } from "../utils";
 
 const role = z.enum(["author", "editor"]);
 
@@ -18,8 +18,8 @@ const userSchema = userCreateSchema
   .pick({
     firstName: true,
     lastName: true,
-
     email: true,
+    role: true,
   })
   .required();
 

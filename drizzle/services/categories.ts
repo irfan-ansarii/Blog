@@ -29,8 +29,8 @@ export async function createCategory(
     .then(findFirst);
 }
 
-export async function getCategory(id: any, params?: Record<string, any>) {
-  const { slug } = params || {};
+export async function getCategory(id: any, params: Record<string, any>) {
+  const { slug, accountId } = params;
 
   return await db
     .select({
@@ -41,9 +41,12 @@ export async function getCategory(id: any, params?: Record<string, any>) {
     .leftJoin(postsCategories, eq(postsCategories.categoryId, categories.id))
     .leftJoin(posts, eq(posts.id, postsCategories.postId))
     .where(
-      or(
-        id ? eq(categories.id, id) : undefined,
-        slug ? eq(categories.slug, slug) : undefined
+      and(
+        eq(categories.accountId, accountId),
+        or(
+          id ? eq(categories.id, id) : undefined,
+          slug ? eq(categories.slug, slug) : undefined
+        )
       )
     )
     .groupBy(categories.id)
@@ -63,7 +66,7 @@ export async function getCategories(params: Record<string, any>) {
     .leftJoin(posts, eq(postsCategories.postId, posts.id))
     .where(
       and(
-        accountId ? eq(categories.accountId, accountId) : undefined,
+        eq(categories.accountId, accountId),
         ids ? inArray(categories.id, ids) : undefined,
         q ? or(ilike(categories.title, `%${q}%`)) : undefined
       )
@@ -108,6 +111,6 @@ export const getPostCategories = async (postId: number) => {
     })
     .from(postsCategories)
     .leftJoin(categories, eq(postsCategories.categoryId, categories.id))
-    .where(postId ? eq(postsCategories.postId, postId) : undefined)
+    .where(eq(postsCategories.postId, postId))
     .groupBy(categories.id, postsCategories.postId);
 };

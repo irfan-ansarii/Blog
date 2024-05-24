@@ -11,7 +11,7 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { categoryCreateSchema } from "@/drizzle/schemas";
 
-import { DELETE_ROLES } from "./utils";
+import { DELETE_ROLES } from "../utils";
 
 const categorySchema = categoryCreateSchema.pick({
   title: true,
@@ -41,7 +41,7 @@ const app = new Hono()
     });
   })
   /********************************************************************* */
-  /**                         GET CATEGORY ROUTE                         */
+  /**                        GET CATEGORIES ROUTE                        */
   /********************************************************************* */
   .get("/", async (c) => {
     const { accountId } = c.get("jwtPayload");

@@ -3,13 +3,13 @@ import { handle } from "hono/vercel";
 import { jwt } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 
-import liveblockHandler from "@/app/api/liveblocks";
+import liveblockHandler from "@/app/api/routes/liveblocks";
 
-import authHandler from "@/app/api/auth";
-import usersHandler from "@/app/api/users";
-import postsHandler from "@/app/api/posts";
-import categroiesHandler from "@/app/api/categories";
-import commentsHandler from "@/app/api/comments";
+import authHandler from "@/app/api/routes/auth";
+import usersHandler from "@/app/api/routes/users";
+import postsHandler from "@/app/api/routes/posts";
+import categroiesHandler from "@/app/api/routes/categories";
+import commentsHandler from "@/app/api/routes/comments";
 export const runtime = "edge";
 
 const app = new Hono().basePath("/api");

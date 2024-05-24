@@ -17,21 +17,11 @@ import {
   updatePost,
 } from "@/drizzle/services/posts";
 
-import { DELETE_ROLES } from "./utils";
-import { createCommentSchema } from "@/drizzle/schemas/comments";
-import { createComment, getComments } from "@/drizzle/services/comments";
+import { DELETE_ROLES } from "../utils";
+import { getComments } from "@/drizzle/services/comments";
 
 const postSchema = postCreateSchema.omit({ accountId: true }).extend({
   categories: z.array(z.string().or(z.number())),
-});
-
-const createCategoriesSchema = z.object({
-  categories: z.array(z.string().or(z.number())),
-});
-
-const commentSchema = createCommentSchema.omit({
-  accountId: true,
-  postId: true,
 });
 
 const app = new Hono()
@@ -104,55 +94,18 @@ const app = new Hono()
     const { id } = c.req.param();
     const { accountId } = c.get("jwtPayload");
 
-    const post = await getPost(id);
+    const post = await getPost(id, {
+      accountId,
+    });
 
-    if (accountId && post?.accountId !== accountId) {
-      throw new HTTPException(404, { message: "Not Found" });
-    }
+    if (!post) throw new HTTPException(404, { message: "Not Found" });
 
     return c.json({
       success: true,
       data: post,
     });
   })
-  /******************************************************************* */
-  /*                       CREATE POST CATEGORIES                      */
-  /******************************************************************* */
-  .post(
-    "/:id/categories",
-    zValidator("json", createCategoriesSchema),
-    async (c) => {
-      const { id } = c.req.param();
-      const { accountId } = c.get("jwtPayload");
-      const values = c.req.valid("json");
-      const post = await getPost(id, {
-        accountId,
-      });
 
-      if (!post) {
-        throw new HTTPException(404, { message: "Not Found" });
-      }
-
-      // get valid category ids
-      const categories = await getCategories({
-        accountId,
-        ids: values.categories,
-      });
-
-      // organize categories
-      const categoriesCreate = categories.map((value) => ({
-        postId: Number(id),
-        categoryId: value.id!,
-      }));
-
-      const results = await createPostCategories(categoriesCreate);
-
-      return c.json({
-        success: true,
-        data: results,
-      });
-    }
-  )
   /******************************************************************* */
   /*                         GET POST CATEGORIES                        */
   /******************************************************************* */
@@ -164,35 +117,13 @@ const app = new Hono()
       accountId,
     });
 
-    if (!post) {
-      throw new HTTPException(404, { message: "Not Found" });
-    }
+    if (!post) throw new HTTPException(404, { message: "Not Found" });
+
     const categories = await getPostCategories(Number(id));
 
     return c.json({
       success: true,
       data: categories,
-    });
-  })
-
-  /******************************************************************* */
-  /*                          CREATE COMMENT                           */
-  /******************************************************************* */
-  .post("/:id/comments", zValidator("json", commentSchema), async (c) => {
-    const values = c.req.valid("json");
-    const { id: postId } = c.req.param();
-    const { id: userId, accountId } = c.get("jwtPayload");
-
-    const result = await createComment({
-      ...values,
-      postId: Number(postId),
-      accountId,
-      createdBy: userId,
-    });
-
-    return c.json({
-      success: true,
-      data: result,
     });
   })
   /******************************************************************* */
