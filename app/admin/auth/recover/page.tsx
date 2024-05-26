@@ -6,22 +6,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import React from "react";
-import ResetPasswordForm from "../_components/reset-form";
+import RecoverForm from "../_components/recover-form";
 
-const ResetPasswordPage = () => {
+const RecoverPage = () => {
   return (
     <Card className="w-full max-w-md border-0 sm:border sm:p-4">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Create Password</CardTitle>
+        <CardTitle className="text-2xl">Recover Password</CardTitle>
         <CardDescription>
-          Enter your email and password to access your account.
+          Enter your email and we will send you an OTP.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <ResetPasswordForm />
+        <RecoverForm />
       </CardContent>
     </Card>
   );
 };
 
-export default ResetPasswordPage;
+export default RecoverPage;
