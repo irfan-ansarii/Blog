@@ -10,7 +10,7 @@ import OtpSigninForm from "../../_components/otp-signin-form";
 
 const OTPLoginPage = () => {
   return (
-    <Card className="w-full max-w-md border-0 sm:border sm:p-4">
+    <Card className="w-full max-w-lg border-0 sm:border sm:p-4">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Signin with OTP</CardTitle>
         <CardDescription>

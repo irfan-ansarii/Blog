@@ -1,9 +1,13 @@
 "use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import Link from "next/link";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useSigninOTP } from "@/query/auth";
+
+import { Loader } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -15,11 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Loader } from "lucide-react";
-import { toast } from "sonner";
-
 export const signinSchema = z.object({
   email: z
     .string()
@@ -28,7 +27,7 @@ export const signinSchema = z.object({
 });
 
 const OtpSigninForm = () => {
-  const [loading, setLoading] = useState(false);
+  const mutation = useSigninOTP();
   const router = useRouter();
 
   const form = useForm({
@@ -39,19 +38,14 @@ const OtpSigninForm = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof signinSchema>) => {
-    setLoading(true);
-
-    try {
-      // toast.success(`OTP sent to ${res.data.email}`);
-
-      const path = `/admin/auth/signin/verify?email=${values.email}`;
-      router.push(path);
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (values: z.infer<typeof signinSchema>) => {
+    mutation.mutate(values, {
+      onSuccess: ({ data }) => {
+        const path = `/admin/auth/signin/verify?email=${data.email}`;
+        router.push(path);
+      },
+      onError: (error) => toast.error(error.message),
+    });
   };
 
   return (
@@ -75,8 +69,13 @@ const OtpSigninForm = () => {
           <Button
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
+            disabled={mutation.isPending}
           >
-            {loading ? <Loader className="w-4 h-4 animate-spin" /> : "Send OTP"}
+            {mutation.isPending ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              "Send OTP"
+            )}
           </Button>
 
           <div className="flex items-center space-x-2 w-full">

@@ -1,9 +1,18 @@
 "use client";
+import { useState } from "react";
+import Link from "next/link";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { toast } from "sonner";
+import { useSignin } from "@/query/auth";
+import { useRouter } from "next/navigation";
 
+import { Eye, EyeOff, Loader } from "lucide-react";
+import Tooltip from "@/components/custom-ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,12 +21,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button, buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import Tooltip from "@/components/custom-ui/tooltip";
 
 export const signinSchema = z.object({
   email: z
@@ -28,6 +31,8 @@ export const signinSchema = z.object({
 });
 
 const SigninForm = () => {
+  const signin = useSignin();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm({
     resolver: zodResolver(signinSchema),
@@ -37,7 +42,15 @@ const SigninForm = () => {
     },
   });
 
-  const onSubmit = () => {};
+  const onSubmit = (values: z.infer<typeof signinSchema>) => {
+    signin.mutate(values, {
+      onSuccess: () => {
+        toast.success("Logged in sucessfully");
+        router.push("/admin/dashboard");
+      },
+      onError: (error) => toast.error(error.message),
+    });
+  };
 
   return (
     <Form {...form}>
@@ -59,7 +72,7 @@ const SigninForm = () => {
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem className="relative">
+            <FormItem>
               <div className="flex items-center justify-between">
                 <FormLabel>Password</FormLabel>
                 <Link
@@ -69,32 +82,32 @@ const SigninForm = () => {
                   Forgot password?
                 </Link>
               </div>
-
-              <FormControl>
-                <Input
-                  placeholder="••••••••"
-                  type={showPassword ? "text" : "password"}
-                  {...field}
-                />
-              </FormControl>
-
-              <Tooltip
-                content={showPassword ? "Hide password" : "Show password"}
-              >
-                <Button
-                  size="icon"
-                  variant="link"
-                  type="button"
-                  className="absolute right-0 bottom-0"
-                  onClick={() => setShowPassword(!showPassword)}
+              <div className="relative">
+                <FormControl>
+                  <Input
+                    placeholder="••••••••"
+                    type={showPassword ? "text" : "password"}
+                    {...field}
+                  />
+                </FormControl>
+                <Tooltip
+                  content={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </Button>
-              </Tooltip>
+                  <Button
+                    size="icon"
+                    variant="link"
+                    type="button"
+                    className="absolute right-0 bottom-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </Button>
+                </Tooltip>
+              </div>
 
               <FormMessage />
             </FormItem>
@@ -104,8 +117,13 @@ const SigninForm = () => {
           <Button
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
+            disabled={signin.isPending}
           >
-            Sign in
+            {signin.isPending ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              "Sign in"
+            )}
           </Button>
 
           <div className="flex items-center space-x-2 w-full">

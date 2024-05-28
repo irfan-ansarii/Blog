@@ -180,14 +180,12 @@ const app = new Hono()
 
     const token = await sign(payload, "secret");
 
-    setCookie(c, "token", token, {
-      path: "/",
-    });
     const sanitized = sanitizeOutput(userData, { otp: true, password: true });
 
     return c.json({
+      success: true,
       data: {
-        token,
+        token: token,
         ...sanitized,
       },
     });
@@ -237,6 +235,7 @@ const app = new Hono()
     const sanitized = sanitizeOutput(userData, { otp: true, password: true });
 
     return c.json({
+      success: true,
       data: sanitized,
     });
   });

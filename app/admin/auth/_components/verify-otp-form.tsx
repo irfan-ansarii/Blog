@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSigninOTP, useSigninVerify } from "@/query/auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { setCookie } from "cookies-next";
 
+import { Loader } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -19,9 +25,6 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Badge } from "@/components/ui/badge";
-import { client } from "@/lib/hono";
-import { useEffect, useState } from "react";
 
 export const verifySchema = z.object({
   email: z.string().email(),
@@ -29,10 +32,11 @@ export const verifySchema = z.object({
 });
 
 const VerifyOtpForm = ({ email }: { email: string }) => {
-  const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
 
+  const verify = useSigninVerify();
+  const sendOtp = useSigninOTP();
+  const router = useRouter();
   const form = useForm({
     resolver: zodResolver(verifySchema),
     defaultValues: {
@@ -41,35 +45,37 @@ const VerifyOtpForm = ({ email }: { email: string }) => {
     },
   });
 
+  // verify otp
   const onSubmit = async (values: z.infer<typeof verifySchema>) => {
-    const res = await client.api.auth.signin.verify.$post({
-      json: {
-        email: values.email,
-        otp: values.otp,
+    verify.mutate(values, {
+      onSuccess: ({ data }) => {
+        console.log(data);
+        toast.success("Logged in sucessfully");
+        // @ts-ignore - token exists on data but ts is not able to infer
+        setCookie("token", data.token);
+        router.push("/admin/dashboard");
       },
+      onError: (err) => toast.error(err.message),
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      console.log(data);
-    }
   };
 
+  // resend otp
   const handleResendOtp = async () => {
     const email = form.getValues("email");
 
-    setResending(true);
-
-    await new Promise<void>((res) => {
-      setTimeout(() => {
-        res();
-      }, 2000);
-    });
-
-    setResending(false);
-    setTimeLeft(60);
+    sendOtp.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          toast.success("OTP sent sucessfully");
+          setTimeLeft(60);
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
+  // timeleft event listener
   useEffect(() => {
     const timerId = setInterval(() => {
       setTimeLeft((prevTime) => prevTime - 1);
@@ -104,11 +110,11 @@ const VerifyOtpForm = ({ email }: { email: string }) => {
               <FormMessage />
               <div className="flex justify-between text-sm">
                 <p className="text-sm text-muted-foreground">
-                  Did not received OTP?
+                  {sendOtp.isPending ? "Sending..." : "Did not received OTP?"}
                 </p>
 
-                {resending ? (
-                  "Sending..."
+                {sendOtp.isPending ? (
+                  <Loader className="w-4 h-4 animate-spin" />
                 ) : timeLeft > 0 ? (
                   <span className="text-sm font-medium">
                     Resend OTP in {timeLeft} seconds
@@ -132,8 +138,13 @@ const VerifyOtpForm = ({ email }: { email: string }) => {
           <Button
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
+            disabled={verify.isPending}
           >
-            Verify
+            {verify.isPending ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              "Verify"
+            )}
           </Button>
 
           <div className="flex items-center space-x-2 w-full">

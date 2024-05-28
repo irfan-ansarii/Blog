@@ -1,9 +1,14 @@
 "use client";
 
+import Link from "next/link";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useRecover } from "@/query/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
+import { Loader } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -14,9 +19,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
 
-export const signinSchema = z.object({
+export const recoverSchema = z.object({
   email: z
     .string()
     .min(1, { message: "Required" })
@@ -24,15 +28,26 @@ export const signinSchema = z.object({
 });
 
 const RecoverForm = () => {
+  const recover = useRecover();
+  const router = useRouter();
   const form = useForm({
-    resolver: zodResolver(signinSchema),
+    resolver: zodResolver(recoverSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = () => {};
+  const onSubmit = (values: z.infer<typeof recoverSchema>) => {
+    recover.mutate(values, {
+      onSuccess: ({ data }) => {
+        toast.success("OTP sent successfully");
+        const path = `/admin/auth/reset?email=${data.email}`;
+        router.push(path);
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
 
   return (
     <Form {...form}>
@@ -55,8 +70,13 @@ const RecoverForm = () => {
           <Button
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
+            disabled={recover.isPending}
           >
-            Send OTP
+            {recover.isPending ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              "Send OTP"
+            )}
           </Button>
 
           <div className="flex items-center space-x-2 w-full">

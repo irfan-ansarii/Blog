@@ -1,9 +1,14 @@
 "use client";
-
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { toast } from "sonner";
+import { useSigninOTP } from "@/query/auth";
+
+import { Eye, EyeOff, Loader } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -14,11 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import Tooltip from "@/components/custom-ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import {
   InputOTP,
   InputOTPGroup,
@@ -26,38 +27,64 @@ import {
 } from "@/components/ui/input-otp";
 
 export const resetSchema = z.object({
+  email: z.string().email(),
   otp: z.string().length(6, { message: "Incorrect OTP" }),
   password: z.string().min(8, { message: "Required" }),
   confirmPassword: z.string().min(8, { message: "Required" }),
 });
 
-const ResetPasswordForm = () => {
+const ResetPasswordForm = ({ email }: { email: string }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const sendOtp = useSigninOTP();
   const form = useForm({
     resolver: zodResolver(resetSchema),
     defaultValues: {
+      email,
       otp: "",
       password: "",
       confirmPassword: "",
     },
   });
 
+  const otp = form.getValues("otp")?.length > 0;
+  const password = form.getValues("password")?.length > 0;
+
   const onSubmit = () => {};
+
+  const handleResendOtp = async () => {
+    const email = form.getValues("email");
+
+    sendOtp.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          toast.success("OTP sent sucessfully");
+          setTimeLeft(60);
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  };
+
+  // timeleft event listener
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [timeLeft]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="otp"
           render={({ field }) => (
             <FormItem>
-              <div className="flex items-center justify-between">
-                <FormLabel>One-Time Password</FormLabel>
-                <Link href="/admin/auth/signup">
-                  <Badge>Resend</Badge>
-                </Link>
-              </div>
+              <FormLabel>One-Time Password</FormLabel>
 
               <FormControl>
                 <InputOTP maxLength={6} {...field}>
@@ -73,36 +100,39 @@ const ResetPasswordForm = () => {
               </FormControl>
 
               <FormMessage />
+              <div className="flex justify-between text-sm">
+                <p className="text-sm text-muted-foreground">
+                  {sendOtp.isPending ? "Sending..." : "Did not received OTP?"}
+                </p>
+
+                {sendOtp.isPending ? (
+                  <Loader className="w-4 h-4 animate-spin" />
+                ) : timeLeft > 0 ? (
+                  <span className="text-sm font-medium">
+                    Resend OTP in {timeLeft} seconds
+                  </span>
+                ) : (
+                  <Button
+                    className="underline py-0 px-0 h-auto"
+                    variant="link"
+                    type="button"
+                    onClick={handleResendOtp}
+                  >
+                    Resend OTP
+                  </Button>
+                )}
+              </div>
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="me@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
+          disabled={!otp}
           render={({ field }) => (
             <FormItem className="relative">
-              <div className="flex items-center justify-between">
-                <FormLabel>Password</FormLabel>
-                <Link
-                  className="text-sm font-medium underline underline-offset-4"
-                  href="/admin/auth/recover"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <FormLabel>Password</FormLabel>
 
               <FormControl>
                 <Input
@@ -134,12 +164,26 @@ const ResetPasswordForm = () => {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          disabled={!otp || !password}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <Input placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="space-y-4">
           <Button
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
           >
-            Sign in
+            Create Password
           </Button>
 
           <div className="flex items-center space-x-2 w-full">
@@ -147,8 +191,11 @@ const ResetPasswordForm = () => {
             <span className="text-muted-foreground text-sm">OR</span>
             <hr className="flex-grow" />
           </div>
-          <Link href="" className={buttonVariants({ className: "w-full" })}>
-            Signin with OTP
+          <Link
+            href="/admin/auth/signin"
+            className={buttonVariants({ className: "w-full" })}
+          >
+            Signin
           </Link>
           <div className="flex items-center justify-center w-full">
             <p className="text-sm text-muted-foreground">

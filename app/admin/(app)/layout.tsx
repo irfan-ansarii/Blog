@@ -1,9 +1,16 @@
-import React from "react";
-
+import { client } from "@/lib/hono-server";
+import { redirect } from "next/navigation";
 import Sidebar from "@/components/admin/sidebar";
 import Header from "@/components/admin/header";
 
-const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
+  const user = await client.api.users.me.$get();
+  const json = await user.json();
+
+  if (!json.success) {
+    redirect("/admin/auth/signin");
+  }
+
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r lg:block bg-secondary">

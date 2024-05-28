@@ -1,6 +1,14 @@
-import React from "react";
+import { redirect } from "next/navigation";
+import { client } from "@/lib/hono-server";
 
-const layout = ({ children }: { children: React.ReactNode }) => {
+const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
+  const user = await client.api.users.me.$get();
+  const json = await user.json();
+
+  if (json.success) {
+    redirect("/admin/dashboard");
+  }
+
   return (
     <main className="flex h-screen items-center justify-center">
       {children}
@@ -8,4 +16,4 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default layout;
+export default AuthLayout;
