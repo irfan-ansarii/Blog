@@ -72,7 +72,7 @@ const Sidebar = ({ className }: { className?: string }) => {
           {items.map((item) => {
             const Icon = item.icon;
             return (
-              <NavItem href={`/admin/${item.slug}`}>
+              <NavItem href={`/admin/${item.slug}`} key={item.slug}>
                 <span className="inline-flex items-center gap-2">
                   <Icon className="w-5 h-5" />
                   {item.title}

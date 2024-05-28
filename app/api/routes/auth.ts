@@ -1,12 +1,14 @@
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
-import { ZodSchema, z } from "zod";
+import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { getUser, updateUser } from "@/drizzle/services/users";
 import { createAccount } from "@/drizzle/services/accounts";
 
 import { sanitizeOutput } from "../utils";
 import { HTTPException } from "hono/http-exception";
+
+import { setCookie } from "hono/cookie";
 
 const generateOTP = () => {
   const otp = Math.floor(100000 + Math.random() * 900000);
@@ -112,6 +114,10 @@ const app = new Hono()
 
     const token = await sign(payload, "secret");
 
+    setCookie(c, "token", token, {
+      path: "/",
+    });
+
     return c.json({
       success: true,
       data: {
@@ -134,7 +140,7 @@ const app = new Hono()
       throw new HTTPException(400, { message: "Invalid email" });
     }
     const otp = generateOTP();
-
+    console.log(otp);
     await updateUser(userData.id, { otp });
 
     return c.json({
@@ -162,7 +168,7 @@ const app = new Hono()
       throw new HTTPException(400, { message: "Invalid otp" });
     }
 
-    await updateUser(userData.id, { otp: "" });
+    // await updateUser(userData.id, { otp: "" });
 
     const payload = {
       id: userData.id,
@@ -174,6 +180,9 @@ const app = new Hono()
 
     const token = await sign(payload, "secret");
 
+    setCookie(c, "token", token, {
+      path: "/",
+    });
     const sanitized = sanitizeOutput(userData, { otp: true, password: true });
 
     return c.json({

@@ -1,6 +1,7 @@
-"use server";
-import { cookies } from "next/headers";
+import { getCookie } from "cookies-next";
 
-const cookieStore = cookies();
-const token = cookieStore.get("token");
-export default token;
+const cookie = getCookie("key");
+
+console.log(cookie);
+
+export { cookie };

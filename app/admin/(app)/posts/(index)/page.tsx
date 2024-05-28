@@ -5,21 +5,19 @@ import PostCard from "../_components/post-card";
 
 const PostsPage = async () => {
   const response = await client.api.posts.$get({
-    query: {
-      q: "1",
-    },
+    query: {},
   });
 
   if (!response.ok) throw new Error("");
 
-  const { data, meta } = await response.json();
+  const data = await response.json();
 
   return (
     <>
       <div className="grid gap-3 items-start flex-1">
-        {data.map((post) => (
+        {/* {data?.map((post) => (
           <PostCard key={post.id} post={post} />
-        ))}
+        ))} */}
       </div>
       <Pagination />
     </>

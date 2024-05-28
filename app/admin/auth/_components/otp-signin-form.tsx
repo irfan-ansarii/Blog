@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
-import { client } from "@/lib/hono";
 import {
   Form,
   FormControl,
@@ -17,6 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader } from "lucide-react";
+import { toast } from "sonner";
 
 export const signinSchema = z.object({
   email: z
@@ -26,6 +28,7 @@ export const signinSchema = z.object({
 });
 
 const OtpSigninForm = () => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm({
@@ -37,15 +40,17 @@ const OtpSigninForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof signinSchema>) => {
-    const res = await client.api.auth.signin.otp.$post({
-      json: {
-        email: values.email,
-      },
-    });
+    setLoading(true);
 
-    if (res.ok) {
-      const data = await res.json();
-      console.log(data);
+    try {
+      // toast.success(`OTP sent to ${res.data.email}`);
+
+      const path = `/admin/auth/signin/verify?email=${values.email}`;
+      router.push(path);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,7 +76,7 @@ const OtpSigninForm = () => {
             className="w-full bg-lime-500 hover:bg-lime-600"
             type="submit"
           >
-            Send OTP
+            {loading ? <Loader className="w-4 h-4 animate-spin" /> : "Send OTP"}
           </Button>
 
           <div className="flex items-center space-x-2 w-full">
