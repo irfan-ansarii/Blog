@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { useSignin } from "@/query/auth";
+import { useSignin } from "@/features/mutations/auth";
 import { useRouter } from "next/navigation";
 
 import { Eye, EyeOff, Loader } from "lucide-react";

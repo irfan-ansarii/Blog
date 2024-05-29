@@ -1,17 +1,19 @@
 import { redirect } from "next/navigation";
-import { client } from "@/lib/hono-server";
+import { getSession } from "@/features/query/users";
 
 const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
-  const user = await client.api.users.me.$get();
-  const json = await user.json();
-
-  if (json.success) {
+  let session = undefined;
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.log(error);
+  }
+  if (session) {
     redirect("/admin/dashboard");
   }
-
   return (
-    <main className="flex h-screen items-center justify-center">
-      {children}
+    <main className="flex h-screen items-center justify-center relative">
+      <div className="relative">{children}</div>
     </main>
   );
 };

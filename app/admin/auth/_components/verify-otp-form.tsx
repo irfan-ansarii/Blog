@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSigninOTP, useSigninVerify } from "@/query/auth";
+import { useSigninOTP, useSigninVerify } from "@/features/mutations/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { setCookie } from "cookies-next";

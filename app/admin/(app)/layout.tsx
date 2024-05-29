@@ -1,13 +1,12 @@
-import { client } from "@/lib/hono-server";
+import { getSession } from "@/features/query/users";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/admin/sidebar";
 import Header from "@/components/admin/header";
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
-  const user = await client.api.users.me.$get();
-  const json = await user.json();
-
-  if (!json.success) {
+  try {
+    await getSession();
+  } catch (error) {
     redirect("/admin/auth/signin");
   }
 

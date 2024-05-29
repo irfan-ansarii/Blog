@@ -175,7 +175,7 @@ const app = new Hono()
       accountId: userData.accountId,
       role: userData.role,
       plan: userData.plan,
-      exp: Math.floor(Date.now() / 1000) + 60 * 5,
+      exp: Math.floor(Date.now() / 1000) + 86400 * 7 /** 7 days */,
     };
 
     const token = await sign(payload, "secret");

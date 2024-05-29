@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { toast } from "sonner";
-import { useSigninOTP } from "@/query/auth";
+import { useSigninOTP } from "@/features/mutations/auth";
 
 import { Eye, EyeOff, Loader } from "lucide-react";
 import {

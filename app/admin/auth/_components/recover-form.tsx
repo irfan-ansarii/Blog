@@ -4,7 +4,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useRecover } from "@/query/auth";
+import { useRecover } from "@/features/mutations/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
