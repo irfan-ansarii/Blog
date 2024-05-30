@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { format } from "date-fns";
+import { getPostCategories } from "@/features/query/posts";
 import {
   Calendar,
-  EllipsisVertical,
   ExternalLink,
   Eye,
   LockKeyhole,
@@ -13,14 +14,13 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
 import Tooltip from "@/components/custom-ui/tooltip";
-import { ClientResponse } from "hono/client";
-import { format } from "date-fns";
+import PostActions from "./post-actions";
 
-const PostCard = ({ post }) => {
+const PostCard = async ({ post }) => {
+  const { data: categories } = await getPostCategories(post.id);
+
   const isArchived = true;
   return (
     <Card
@@ -41,7 +41,7 @@ const PostCard = ({ post }) => {
 
             <div className="flex-auto overflow-hidden">
               <Link
-                href="/admin/posts/1/"
+                href={`/admin/posts/${post.id}`}
                 className={`text-base md:text-lg font-medium truncate inline-flex items-center [&:hover>svg]:opacity-100 !focus-visible:ring-transparent ${
                   !isArchived ? "line-through text-muted-foreground" : ""
                 }`}
@@ -58,12 +58,10 @@ const PostCard = ({ post }) => {
 
               <div className="flex items-center gap-2 max-w-fit font-medium text-sm md:text-base overflow-hidden">
                 {!isArchived ? (
-                  <p className="text-muted-foreground truncate">
-                    Lorem ipsum dolor sit amet consectetur.
-                  </p>
+                  <p className="text-muted-foreground truncate">{post.slug}</p>
                 ) : (
                   <a
-                    href="/"
+                    href="/posts  "
                     target="_blank"
                     className={`truncate flex-1 inline-flex items-center hover:underline`}
                   >
@@ -97,9 +95,8 @@ const PostCard = ({ post }) => {
             </Tooltip>
           </div>
 
-          <Button className="px-2" variant="ghost">
-            <EllipsisVertical className="w-5 h-5" />
-          </Button>
+          {/* post actions */}
+          <PostActions post={post} />
         </div>
         <div className="flex gap-2 md:gap-4">
           <div className="w-10 md:w-12"></div>
@@ -116,21 +113,32 @@ const PostCard = ({ post }) => {
               Created By
             </span>
 
-            <p>•</p>
+            {post.categoriesCount > 0 ? (
+              <>
+                <p>•</p>
 
-            <Tooltip
-              content={
-                <>
-                  <p>Content</p>
-                </>
-              }
-              variant="card"
-            >
-              <span className="inline-flex items-center text-muted-foreground gap-2">
-                <Tags className="w-4 h-4" />
-                {post.categoriesCount}
-              </span>
-            </Tooltip>
+                <Tooltip
+                  content={
+                    <div className="p-2">
+                      <div className="font-medium mb-3">Categories:</div>
+                      <div className="flex gap-2 flex-wrap">
+                        {categories.map((cat) => (
+                          <Badge key={cat.id} variant="outline">
+                            {cat.title}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                  variant="card"
+                >
+                  <span className="inline-flex items-center text-muted-foreground gap-2">
+                    <Tags className="w-4 h-4" />
+                    {post.categoriesCount}
+                  </span>
+                </Tooltip>
+              </>
+            ) : null}
           </div>
         </div>
       </CardContent>
